@@ -1,0 +1,801 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="RecyclerView," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Idtk" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;本文将简单分析下RecyclerView的绘制流程。既然是一个View，就从onMeasure开始。
+onMeasure1234567891011121314151617181920protected void onMeasure(int widthSpec, int heightSpec) &amp;#123;	if (mLayout.mAutoMeasu">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RecyclerView绘制流程的简单分析">
+<meta property="og:url" content="http://yoursite.com/2017/03/06/RecyclerView.LayoutManager/index.html">
+<meta property="og:site_name" content="Idtk">
+<meta property="og:description" content="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;本文将简单分析下RecyclerView的绘制流程。既然是一个View，就从onMeasure开始。
+onMeasure1234567891011121314151617181920protected void onMeasure(int widthSpec, int heightSpec) &amp;#123;	if (mLayout.mAutoMeasu">
+<meta property="og:updated_time" content="2017-03-12T13:09:39.019Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RecyclerView绘制流程的简单分析">
+<meta name="twitter:description" content="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;本文将简单分析下RecyclerView的绘制流程。既然是一个View，就从onMeasure开始。
+onMeasure1234567891011121314151617181920protected void onMeasure(int widthSpec, int heightSpec) &amp;#123;	if (mLayout.mAutoMeasu">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/03/06/RecyclerView.LayoutManager/"/>
+
+
+
+
+
+  <title> RecyclerView绘制流程的简单分析 | Idtk </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  <div style="display: none;">
+    <script src="//s11.cnzz.com/z_stat.php?id=1261484069&web_id=1261484069" language="JavaScript"></script>
+  </div>
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Idtk</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/06/RecyclerView.LayoutManager/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Idtk">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Idtk">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                RecyclerView绘制流程的简单分析
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-03-06T00:00:00+08:00">
+                2017-03-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2017/03/06/RecyclerView.LayoutManager/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;本文将简单分析下RecyclerView的绘制流程。既然是一个View，就从<code>onMeasure</code>开始。</p>
+<h2 id="onMeasure"><a href="#onMeasure" class="headerlink" title="onMeasure"></a>onMeasure</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onMeasure</span><span class="params">(<span class="keyword">int</span> widthSpec, <span class="keyword">int</span> heightSpec)</span> </span>&#123;</div><div class="line">	<span class="keyword">if</span> (mLayout.mAutoMeasure) &#123;</div><div class="line">		<span class="keyword">final</span> <span class="keyword">int</span> widthMode = MeasureSpec.getMode(widthSpec);</div><div class="line">		<span class="keyword">final</span> <span class="keyword">int</span> heightMode = MeasureSpec.getMode(heightSpec);</div><div class="line">		<span class="keyword">final</span> <span class="keyword">boolean</span> skipMeasure = widthMode == MeasureSpec.EXACTLY</div><div class="line">				&amp;&amp; heightMode == MeasureSpec.EXACTLY;</div><div class="line"></div><div class="line">		mLayout.onMeasure(mRecycler, mState, widthSpec, heightSpec);</div><div class="line"></div><div class="line">		<span class="keyword">if</span> (mState.mLayoutStep == State.STEP_START) &#123;</div><div class="line">			dispatchLayoutStep1();</div><div class="line">		&#125;</div><div class="line"></div><div class="line">		mLayout.setMeasureSpecs(widthSpec, heightSpec);</div><div class="line"></div><div class="line">		dispatchLayoutStep2();</div><div class="line"></div><div class="line">		mLayout.setMeasuredDimensionFromChildren(widthSpec, heightSpec);</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<a id="more"></a>
+<p>在<code>onMeasure</code>中，<code>mLayout</code>就是一个LayoutManager对象，RecyclerView将onMeasure的计算交给了LayoutManager，在<code>LayoutManager#onMeasure</code>中又调用了<code>RecyclerView#defaultOnMeasure</code>方法，在其中调用了<code>LayoutManager#chooseSize</code>方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">chooseSize</span><span class="params">(<span class="keyword">int</span> spec, <span class="keyword">int</span> desired, <span class="keyword">int</span> min)</span> </span>&#123;</div><div class="line">	<span class="keyword">final</span> <span class="keyword">int</span> mode = View.MeasureSpec.getMode(spec);</div><div class="line">	<span class="keyword">final</span> <span class="keyword">int</span> size = View.MeasureSpec.getSize(spec);</div><div class="line">	<span class="keyword">switch</span> (mode) &#123;</div><div class="line">		<span class="keyword">case</span> View.MeasureSpec.EXACTLY:</div><div class="line">			<span class="keyword">return</span> size;</div><div class="line">		<span class="keyword">case</span> View.MeasureSpec.AT_MOST:</div><div class="line">			<span class="keyword">return</span> Math.min(size, Math.max(desired, min));</div><div class="line">		<span class="keyword">case</span> View.MeasureSpec.UNSPECIFIED:</div><div class="line">		<span class="keyword">default</span>:</div><div class="line">			<span class="keyword">return</span> Math.max(desired, min);</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以很明显的看出此方法，根据MessureSpec类型计算了View的宽高尺寸，之后将会调用<code>dispatchLayoutStep2</code>方法对item以及子view进行测量。<code>onLayout</code>中也将调用<code>dispatchLayoutStep2</code>方法，我们将在其中一起说明。</p>
+<h2 id="onLayout"><a href="#onLayout" class="headerlink" title="onLayout"></a>onLayout</h2><p>这里看下<code>onLayout</code>方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onLayout</span><span class="params">(<span class="keyword">boolean</span> changed, <span class="keyword">int</span> l, <span class="keyword">int</span> t, <span class="keyword">int</span> r, <span class="keyword">int</span> b)</span> </span>&#123;</div><div class="line">	dispatchLayout();</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">dispatchLayout</span><span class="params">()</span> </span>&#123;</div><div class="line">	<span class="keyword">if</span> (mState.mLayoutStep == State.STEP_START) &#123;</div><div class="line">		dispatchLayoutStep1();</div><div class="line">		mLayout.setExactMeasureSpecsFrom(<span class="keyword">this</span>);</div><div class="line">		dispatchLayoutStep2();</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	dispatchLayoutStep3();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><code>dispatchLayoutStep2()</code>方法中又调用<code>LayoutManager#onLayoutChildren</code>方法进行布局。这里以LinearLayoutManager为例。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onLayoutChildren</span><span class="params">(RecyclerView.Recycler recycler, RecyclerView.State state)</span> </span>&#123;</div><div class="line">	<span class="comment">// layout algorithm:</span></div><div class="line">	<span class="comment">// 1) by checking children and other variables, find an anchor coordinate and an anchor</span></div><div class="line">	<span class="comment">//  item position.</span></div><div class="line">	<span class="comment">// 2) fill towards start, stacking from bottom</span></div><div class="line">	<span class="comment">// 3) fill towards end, stacking from top</span></div><div class="line">	<span class="comment">// 4) scroll to fulfill requirements like stack from bottom.</span></div><div class="line">	<span class="comment">// create layout state</span></div><div class="line"></div><div class="line">	<span class="keyword">int</span> startOffset;</div><div class="line">	<span class="keyword">int</span> endOffset;</div><div class="line">	<span class="keyword">final</span> <span class="keyword">int</span> firstLayoutDirection;</div><div class="line"></div><div class="line">	onAnchorReady(recycler, state, mAnchorInfo, firstLayoutDirection);</div><div class="line">	detachAndScrapAttachedViews(recycler);</div><div class="line">	mLayoutState.mInfinite = resolveIsInfinite();</div><div class="line">	mLayoutState.mIsPreLayout = state.isPreLayout();</div><div class="line">	<span class="keyword">if</span> (mAnchorInfo.mLayoutFromEnd) &#123;</div><div class="line"></div><div class="line">	&#125; <span class="keyword">else</span> &#123;</div><div class="line">		<span class="comment">// 向下布局</span></div><div class="line">		updateLayoutStateToFillEnd(mAnchorInfo);</div><div class="line">		mLayoutState.mExtra = extraForEnd;</div><div class="line">		<span class="comment">// 填充Item</span></div><div class="line">		fill(recycler, mLayoutState, state, <span class="keyword">false</span>);</div><div class="line">		endOffset = mLayoutState.mOffset;</div><div class="line">		<span class="keyword">final</span> <span class="keyword">int</span> lastElement = mLayoutState.mCurrentPosition;</div><div class="line">		<span class="keyword">if</span> (mLayoutState.mAvailable &gt; <span class="number">0</span>) &#123;</div><div class="line">			extraForStart += mLayoutState.mAvailable;</div><div class="line">		&#125;</div><div class="line">		<span class="comment">// 向上布局</span></div><div class="line">		updateLayoutStateToFillStart(mAnchorInfo);</div><div class="line">		mLayoutState.mExtra = extraForStart;</div><div class="line">		mLayoutState.mCurrentPosition += mLayoutState.mItemDirection;</div><div class="line">		fill(recycler, mLayoutState, state, <span class="keyword">false</span>);</div><div class="line">		startOffset = mLayoutState.mOffset;</div><div class="line"></div><div class="line">	&#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>布局的流程在开头的注释中已经清楚的说明了，这里不再赘述。这里的关注点在<code>LinearLayoutManager#fill</code>方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">fill</span><span class="params">(RecyclerView.Recycler recycler, LayoutState layoutState,</span></span></div><div class="line">		RecyclerView.State state, <span class="keyword">boolean</span> stopOnFocusable) &#123;</div><div class="line">	<span class="comment">// 存储当前可见空间</span></div><div class="line">	<span class="keyword">final</span> <span class="keyword">int</span> start = layoutState.mAvailable;</div><div class="line">	<span class="comment">// 计算可用布局的宽高</span></div><div class="line">	<span class="keyword">int</span> remainingSpace = layoutState.mAvailable + layoutState.mExtra;</div><div class="line">	LayoutChunkResult layoutChunkResult = mLayoutChunkResult;</div><div class="line">	<span class="comment">// 迭代填充item</span></div><div class="line">	<span class="keyword">while</span> ((layoutState.mInfinite || remainingSpace &gt; <span class="number">0</span>) &amp;&amp; layoutState.hasMore(state)) &#123;</div><div class="line">		layoutChunkResult.resetInternal();</div><div class="line">		<span class="comment">// 布局item</span></div><div class="line">		layoutChunk(recycler, state, layoutState, layoutChunkResult);</div><div class="line">		<span class="keyword">if</span> (layoutChunkResult.mFinished) &#123;</div><div class="line">			<span class="keyword">break</span>;</div><div class="line">		&#125;</div><div class="line">		<span class="comment">// 计算布局的偏移位置</span></div><div class="line">		layoutState.mOffset += layoutChunkResult.mConsumed * layoutState.mLayoutDirection;</div><div class="line"></div><div class="line">		<span class="keyword">if</span> (!layoutChunkResult.mIgnoreConsumed || mLayoutState.mScrapList != <span class="keyword">null</span></div><div class="line">				|| !state.isPreLayout()) &#123;</div><div class="line">			layoutState.mAvailable -= layoutChunkResult.mConsumed;</div><div class="line">			<span class="comment">// 计算剩余的空间</span></div><div class="line">			remainingSpace -= layoutChunkResult.mConsumed;</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">return</span> start - layoutState.mAvailable;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在<code>fill</code>方法中将会循环调用<code>layoutChunk</code>方法进行布局。每次布局完成之后将计算剩余的可用空间，之后判断是否还需要继续布局Item。我们这里来看下布局的<code>LinearLayoutManager#layoutChunk</code>方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">layoutChunk</span><span class="params">(RecyclerView.Recycler recycler, RecyclerView.State state,</span></span></div><div class="line">		LayoutState layoutState, LayoutChunkResult result) &#123;</div><div class="line">	<span class="comment">// 获取item view</span></div><div class="line">	View view = layoutState.next(recycler);</div><div class="line">	<span class="comment">// 获取布局参数</span></div><div class="line">	LayoutParams params = (LayoutParams) view.getLayoutParams();</div><div class="line">	<span class="keyword">if</span> (layoutState.mScrapList == <span class="keyword">null</span>) &#123;</div><div class="line">		<span class="keyword">if</span> (mShouldReverseLayout == (layoutState.mLayoutDirection</div><div class="line">				== LayoutState.LAYOUT_START)) &#123;</div><div class="line">			<span class="comment">// 增加item view</span></div><div class="line">			addView(view);</div><div class="line">		&#125; <span class="keyword">else</span> &#123;</div><div class="line">			addView(view, <span class="number">0</span>);</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">	<span class="comment">// 测量item</span></div><div class="line">	measureChildWithMargins(view, <span class="number">0</span>, <span class="number">0</span>);</div><div class="line">	<span class="comment">// 计算item使用的空间</span></div><div class="line">	result.mConsumed = mOrientationHelper.getDecoratedMeasurement(view);</div><div class="line">	<span class="keyword">int</span> left, top, right, bottom;</div><div class="line">	<span class="comment">// 按照水平或者数值方向布局，计算item坐标</span></div><div class="line">	<span class="keyword">if</span> (mOrientation == VERTICAL) &#123;</div><div class="line">		<span class="keyword">if</span> (isLayoutRTL()) &#123;</div><div class="line">			right = getWidth() - getPaddingRight();</div><div class="line">			left = right - mOrientationHelper.getDecoratedMeasurementInOther(view);</div><div class="line">		&#125; <span class="keyword">else</span> &#123;</div><div class="line">			left = getPaddingLeft();</div><div class="line">			right = left + mOrientationHelper.getDecoratedMeasurementInOther(view);</div><div class="line">		&#125;</div><div class="line">		<span class="keyword">if</span> (layoutState.mLayoutDirection == LayoutState.LAYOUT_START) &#123;</div><div class="line">			bottom = layoutState.mOffset;</div><div class="line">			top = layoutState.mOffset - result.mConsumed;</div><div class="line">		&#125; <span class="keyword">else</span> &#123;</div><div class="line">			top = layoutState.mOffset;</div><div class="line">			bottom = layoutState.mOffset + result.mConsumed;</div><div class="line">		&#125;</div><div class="line">	&#125; <span class="keyword">else</span> &#123;</div><div class="line"></div><div class="line">	&#125;</div><div class="line">  	<span class="comment">// item布局</span></div><div class="line">	layoutDecoratedWithMargins(view, left, top, right, bottom);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">measureChildWithMargins</span><span class="params">(View child, <span class="keyword">int</span> widthUsed, <span class="keyword">int</span> heightUsed)</span> </span>&#123;</div><div class="line">	<span class="keyword">final</span> LayoutParams lp = (LayoutParams) child.getLayoutParams();</div><div class="line">	<span class="comment">// 测量分割线</span></div><div class="line">	<span class="keyword">final</span> Rect insets = mRecyclerView.getItemDecorInsetsForChild(child);</div><div class="line">	widthUsed += insets.left + insets.right;</div><div class="line">	heightUsed += insets.top + insets.bottom;</div><div class="line"></div><div class="line">	<span class="keyword">final</span> <span class="keyword">int</span> widthSpec = getChildMeasureSpec(getWidth(), getWidthMode(),</div><div class="line">			getPaddingLeft() + getPaddingRight() +</div><div class="line">					lp.leftMargin + lp.rightMargin + widthUsed, lp.width,</div><div class="line">			canScrollHorizontally());</div><div class="line">	<span class="keyword">final</span> <span class="keyword">int</span> heightSpec = getChildMeasureSpec(getHeight(), getHeightMode(),</div><div class="line">			getPaddingTop() + getPaddingBottom() +</div><div class="line">					lp.topMargin + lp.bottomMargin + heightUsed, lp.height,</div><div class="line">			canScrollVertically());</div><div class="line">	<span class="keyword">if</span> (shouldMeasureChild(child, widthSpec, heightSpec, lp)) &#123;</div><div class="line">      	<span class="comment">// 子View测量</span></div><div class="line">		child.measure(widthSpec, heightSpec);</div><div class="line">	&#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">layoutDecoratedWithMargins</span><span class="params">(View child, <span class="keyword">int</span> left, <span class="keyword">int</span> top, <span class="keyword">int</span> right,</span></span></div><div class="line">		<span class="keyword">int</span> bottom) &#123;</div><div class="line">	<span class="keyword">final</span> LayoutParams lp = (LayoutParams) child.getLayoutParams();</div><div class="line">	<span class="keyword">final</span> Rect insets = lp.mDecorInsets;</div><div class="line">   <span class="comment">// 子View布局</span></div><div class="line">	child.layout(left + insets.left + lp.leftMargin, top + insets.top + lp.topMargin,</div><div class="line">			right - insets.right - lp.rightMargin,</div><div class="line">			bottom - insets.bottom - lp.bottomMargin);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>从代码中可以看出，最后分别调用了item的<code>measure</code>函数与<code>layout</code>函数对view进行了测量和布局。下面我们来看下<code>onDraw</code>方法。</p>
+<h2 id="onDraw"><a href="#onDraw" class="headerlink" title="onDraw"></a>onDraw</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onDraw</span><span class="params">(Canvas c)</span> </span>&#123;</div><div class="line">	<span class="keyword">super</span>.onDraw(c);</div><div class="line"></div><div class="line">	<span class="keyword">final</span> <span class="keyword">int</span> count = mItemDecorations.size();</div><div class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</div><div class="line">		mItemDecorations.get(i).onDraw(c, <span class="keyword">this</span>, mState);</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><code>onDraw</code>的代码比较简单，除了调用<code>super.onDraw</code>外，还对分割线进行了绘制。</p>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;本文通过View的基本方法对RecyclerView的绘制进行了简单的分析。RecyclerView通过LayoutManager类将测量、布局、绘制等从自身中分离了出来，减少了代码的耦合，使其更加灵活、更易扩展。如果在阅读过程中，有任何疑问与问题，欢迎与我联系。</p>
+<p>&nbsp;&nbsp;<strong>博客: www.idtkm.com</strong><br><br>&nbsp;&nbsp;<strong>GitHub: <a href="https://github.com/Idtk" target="_blank" rel="external">https://github.com/Idtk</a></strong><br><br>&nbsp;&nbsp;<strong>微博: <a href="http://weibo.com/Idtk" target="_blank" rel="external">http://weibo.com/Idtk</a></strong><br><br>&nbsp;&nbsp;<strong>邮箱: IdtkMa@gmail.com</strong><br></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/RecyclerView/" rel="tag"># RecyclerView</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/11/10/F1、Property Animation/" rel="next" title="属性动画连续输出值分析">
+                <i class="fa fa-chevron-left"></i> 属性动画连续输出值分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/03/19/NinePhotoView/" rel="prev" title="自定义九宫格控件（附源码地址）">
+                自定义九宫格控件（附源码地址） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/header.jpg"
+               alt="Idtk" />
+          <p class="site-author-name" itemprop="name">Idtk</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Idtk" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/Idtk" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="mailto:IdtkMa@gmail.com" target="_blank" title="Email">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                  Email
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#onMeasure"><span class="nav-number">1.</span> <span class="nav-text">onMeasure</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#onLayout"><span class="nav-number">2.</span> <span class="nav-text">onLayout</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#onDraw"><span class="nav-number">3.</span> <span class="nav-text">onDraw</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最后"><span class="nav-number">4.</span> <span class="nav-text">最后</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Idtk</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "a727d901f6db4dd0a57496c675fe7c96",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+
+  
+
+</body>
+</html>

@@ -1,0 +1,857 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="CustomView," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Idtk" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="在之前的invalidate传递与绘制流程分析文章中我们对invalidate的流程进行了详细分析，现在来继续分析下requestLayout的流程吧
+自定义View系列目录
+一、requestLayout的请求传递我们从View#requestLayout方法的源码开始
+12345678910111213141516171819202122232425public void requestLay">
+<meta property="og:type" content="article">
+<meta property="og:title" content="View的requestLayout传递与测量、布局流程分析">
+<meta property="og:url" content="http://yoursite.com/2016/08/10/10、RequestLayout/index.html">
+<meta property="og:site_name" content="Idtk">
+<meta property="og:description" content="在之前的invalidate传递与绘制流程分析文章中我们对invalidate的流程进行了详细分析，现在来继续分析下requestLayout的流程吧
+自定义View系列目录
+一、requestLayout的请求传递我们从View#requestLayout方法的源码开始
+12345678910111213141516171819202122232425public void requestLay">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/getChildMeasureSpec.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/requestLayout.png">
+<meta property="og:updated_time" content="2017-03-12T13:07:00.315Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="View的requestLayout传递与测量、布局流程分析">
+<meta name="twitter:description" content="在之前的invalidate传递与绘制流程分析文章中我们对invalidate的流程进行了详细分析，现在来继续分析下requestLayout的流程吧
+自定义View系列目录
+一、requestLayout的请求传递我们从View#requestLayout方法的源码开始
+12345678910111213141516171819202122232425public void requestLay">
+<meta name="twitter:image" content="http://ompb0h8qq.bkt.clouddn.com/old/getChildMeasureSpec.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/08/10/10、RequestLayout/"/>
+
+
+
+
+
+  <title> View的requestLayout传递与测量、布局流程分析 | Idtk </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  <div style="display: none;">
+    <script src="//s11.cnzz.com/z_stat.php?id=1261484069&web_id=1261484069" language="JavaScript"></script>
+  </div>
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Idtk</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/08/10/10、RequestLayout/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Idtk">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Idtk">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                View的requestLayout传递与测量、布局流程分析
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-08-10T00:00:00+08:00">
+                2016-08-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2016/08/10/10、RequestLayout/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><strong>在之前的<a href="https://github.com/Idtk/Blog/blob/master/Blog/9%E3%80%81Invalidate.md" target="_blank" rel="external">invalidate传递与绘制流程分析</a>文章中我们对invalidate的流程进行了详细分析，现在来继续分析下requestLayout的流程吧</strong></p>
+<p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
+<h2 id="一、requestLayout的请求传递"><a href="#一、requestLayout的请求传递" class="headerlink" title="一、requestLayout的请求传递"></a>一、requestLayout的请求传递</h2><p>我们从View#requestLayout方法的源码开始</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">requestLayout</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (mMeasureCache != <span class="keyword">null</span>) mMeasureCache.clear();</div><div class="line">    <span class="keyword">if</span> (mAttachInfo != <span class="keyword">null</span> &amp;&amp; mAttachInfo.mViewRequestingLayout == <span class="keyword">null</span>) &#123;</div><div class="line">        <span class="comment">// Only trigger request-during-layout logic if this is the view requesting it,</span></div><div class="line">        <span class="comment">// not the views in its parent hierarchy</span></div><div class="line">        ViewRootImpl viewRoot = getViewRootImpl();</div><div class="line">        <span class="keyword">if</span> (viewRoot != <span class="keyword">null</span> &amp;&amp; viewRoot.isInLayout()) &#123;</div><div class="line">            <span class="keyword">if</span> (!viewRoot.requestLayoutDuringLayout(<span class="keyword">this</span>)) &#123;</div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        mAttachInfo.mViewRequestingLayout = <span class="keyword">this</span>;</div><div class="line">    &#125;</div><div class="line">	<span class="comment">// 增加PFLAG_FORCE_LAYOUT标记，在measure时会校验此属性</span></div><div class="line">    mPrivateFlags |= PFLAG_FORCE_LAYOUT;</div><div class="line">    mPrivateFlags |= PFLAG_INVALIDATED;</div><div class="line">	<span class="comment">// 父类不为空&amp;&amp;父类没有请求重新布局(是否有PFLAG_FORCE_LAYOUT标志)</span></div><div class="line">    <span class="keyword">if</span> (mParent != <span class="keyword">null</span> &amp;&amp; !mParent.isLayoutRequested()) &#123;</div><div class="line">		<span class="comment">// 调用父类的requestLayout</span></div><div class="line">        mParent.requestLayout();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (mAttachInfo != <span class="keyword">null</span> &amp;&amp; mAttachInfo.mViewRequestingLayout == <span class="keyword">this</span>) &#123;</div><div class="line">        mAttachInfo.mViewRequestingLayout = <span class="keyword">null</span>;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<a id="more"></a>
+<p>在源码中，会对measure的缓存进行清除，之后会判断ViewTree是否正在布局流程，接着为View设置标记，PFLAG_FORCE_LAYOUT标记会在View进行measure时验证。之后非常重要会判断父类是否为空以及检查是否正在请求重新布局(即检查之间设置的PFLAG_FORCE_LAYOUT标记)，如果满足条件则会父类的requestLayout方法，而ViewGroup继承自View，其requestLayout方法调用了View的requestLayout方法，所以会不断迭代的调用父类的requestLayout方法，直到DecorView的父类ViewRoot。<br></p>
+<p>ViewRoot的实现类为ViewRootImpl，在这个类中的requestLayout方法与View中的并不相同，我们来看下他的源码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">requestLayout</span><span class="params">()</span> </span>&#123;</div><div class="line">	<span class="comment">// 是否在处理requestLayout</span></div><div class="line">    <span class="keyword">if</span> (!mHandlingLayoutInLayoutRequest) &#123;</div><div class="line">		<span class="comment">// 检查创建view的线程是否为当前线程</span></div><div class="line">        checkThread();</div><div class="line">        mLayoutRequested = <span class="keyword">true</span>;</div><div class="line">        scheduleTraversals();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在ViewRootImpl#requestLayout中,首先判断是否正在requestLayout中，之后检查当前线程是否为创建View的线程。接着调用scheduleTraversals方法，发起请求。<br></p>
+<p>ViewRootImpl#scheduleTraversals方法调用performTraversals方法的过程已经在<a href="https://github.com/Idtk/Blog/blob/master/Blog/9%E3%80%81Invalidate.md" target="_blank" rel="external">自定义View——invalidate流程分析</a>中进行了详细说明，在这里就不在赘述了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">performTraversals</span><span class="params">()</span> </span>&#123;</div><div class="line">	...</div><div class="line">	Rect frame = mWinFrame;</div><div class="line">	<span class="keyword">if</span> (mFirst) &#123;</div><div class="line">		mFullRedrawNeeded = <span class="keyword">true</span>;</div><div class="line">		mLayoutRequested = <span class="keyword">true</span>;</div><div class="line">		<span class="keyword">if</span> (lp.type == WindowManager.LayoutParams.TYPE_STATUS_BAR_PANEL</div><div class="line">				|| lp.type == WindowManager.LayoutParams.TYPE_INPUT_METHOD) &#123;</div><div class="line">			<span class="comment">// NOTE -- system code, won't try to do compat mode.</span></div><div class="line">			Point size = <span class="keyword">new</span> Point();</div><div class="line">			mDisplay.getRealSize(size);</div><div class="line">			desiredWindowWidth = size.x;</div><div class="line">			desiredWindowHeight = size.y;</div><div class="line">		&#125; <span class="keyword">else</span> &#123;</div><div class="line">			DisplayMetrics packageMetrics =</div><div class="line">				mView.getContext().getResources().getDisplayMetrics();</div><div class="line">			desiredWindowWidth = packageMetrics.widthPixels;</div><div class="line">			desiredWindowHeight = packageMetrics.heightPixels;</div><div class="line">		&#125;</div><div class="line">		<span class="comment">// We used to use the following condition to choose 32 bits drawing caches:</span></div><div class="line">		<span class="comment">// PixelFormat.hasAlpha(lp.format) || lp.format == PixelFormat.RGBX_8888</span></div><div class="line">		<span class="comment">// However, windows are now always 32 bits by default, so choose 32 bits</span></div><div class="line">		mAttachInfo.mUse32BitDrawingCache = <span class="keyword">true</span>;</div><div class="line">		mAttachInfo.mHasWindowFocus = <span class="keyword">false</span>;</div><div class="line">		mAttachInfo.mWindowVisibility = viewVisibility;</div><div class="line">		mAttachInfo.mRecomputeGlobalAttributes = <span class="keyword">false</span>;</div><div class="line">		viewVisibilityChanged = <span class="keyword">false</span>;</div><div class="line">		mLastConfiguration.setTo(host.getResources().getConfiguration());</div><div class="line">		mLastSystemUiVisibility = mAttachInfo.mSystemUiVisibility;</div><div class="line">		<span class="comment">// Set the layout direction if it has not been set before (inherit is the default)</span></div><div class="line">		<span class="keyword">if</span> (mViewLayoutDirectionInitial == View.LAYOUT_DIRECTION_INHERIT) &#123;</div><div class="line">			host.setLayoutDirection(mLastConfiguration.getLayoutDirection());</div><div class="line">		&#125;</div><div class="line">		host.dispatchAttachedToWindow(mAttachInfo, <span class="number">0</span>);</div><div class="line">		mAttachInfo.mTreeObserver.dispatchOnWindowAttachedChange(<span class="keyword">true</span>);</div><div class="line">		dispatchApplyInsets(host);</div><div class="line">		<span class="comment">//Log.i(TAG, "Screen on initialized: " + attachInfo.mKeepScreenOn);</span></div><div class="line">	&#125; <span class="keyword">else</span> &#123;</div><div class="line">		desiredWindowWidth = frame.width();</div><div class="line">		desiredWindowHeight = frame.height();</div><div class="line">		<span class="keyword">if</span> (desiredWindowWidth != mWidth || desiredWindowHeight != mHeight) &#123;</div><div class="line">			<span class="keyword">if</span> (DEBUG_ORIENTATION) Log.v(TAG,</div><div class="line">					<span class="string">"View "</span> + host + <span class="string">" resized to: "</span> + frame);</div><div class="line">			mFullRedrawNeeded = <span class="keyword">true</span>;</div><div class="line">			mLayoutRequested = <span class="keyword">true</span>;</div><div class="line">			windowSizeMayChange = <span class="keyword">true</span>;</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	...</div><div class="line"></div><div class="line">	<span class="keyword">if</span> (mFirst || windowShouldResize || insetsChanged ||</div><div class="line">			viewVisibilityChanged || params != <span class="keyword">null</span>) &#123;</div><div class="line">		...</div><div class="line">		<span class="keyword">if</span> (!mStopped || mReportNextDraw) &#123;</div><div class="line">			<span class="keyword">boolean</span> focusChangedDueToTouchMode = ensureTouchModeLocally(</div><div class="line">					(relayoutResult&amp;WindowManagerGlobal.RELAYOUT_RES_IN_TOUCH_MODE) != <span class="number">0</span>);</div><div class="line">			<span class="keyword">if</span> (focusChangedDueToTouchMode || mWidth != host.getMeasuredWidth()</div><div class="line">					|| mHeight != host.getMeasuredHeight() || contentInsetsChanged) &#123;</div><div class="line">				<span class="keyword">int</span> childWidthMeasureSpec = getRootMeasureSpec(mWidth, lp.width);</div><div class="line">				<span class="keyword">int</span> childHeightMeasureSpec = getRootMeasureSpec(mHeight, lp.height);</div><div class="line"></div><div class="line">				<span class="keyword">if</span> (DEBUG_LAYOUT) Log.v(TAG, <span class="string">"Ooops, something changed!  mWidth="</span></div><div class="line">						+ mWidth + <span class="string">" measuredWidth="</span> + host.getMeasuredWidth()</div><div class="line">						+ <span class="string">" mHeight="</span> + mHeight</div><div class="line">						+ <span class="string">" measuredHeight="</span> + host.getMeasuredHeight()</div><div class="line">						+ <span class="string">" coveredInsetsChanged="</span> + contentInsetsChanged);</div><div class="line"></div><div class="line">				 <span class="comment">// Ask host how big it wants to be</span></div><div class="line">				performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);</div><div class="line"></div><div class="line">				<span class="comment">// Implementation of weights from WindowManager.LayoutParams</span></div><div class="line">				<span class="comment">// We just grow the dimensions as needed and re-measure if</span></div><div class="line">				<span class="comment">// needs be</span></div><div class="line">				<span class="keyword">int</span> width = host.getMeasuredWidth();</div><div class="line">				<span class="keyword">int</span> height = host.getMeasuredHeight();</div><div class="line">				<span class="keyword">boolean</span> measureAgain = <span class="keyword">false</span>;</div><div class="line"></div><div class="line">				<span class="keyword">if</span> (lp.horizontalWeight &gt; <span class="number">0.0f</span>) &#123;</div><div class="line">					width += (<span class="keyword">int</span>) ((mWidth - width) * lp.horizontalWeight);</div><div class="line">					childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(width,</div><div class="line">							MeasureSpec.EXACTLY);</div><div class="line">					measureAgain = <span class="keyword">true</span>;</div><div class="line">				&#125;</div><div class="line">				<span class="keyword">if</span> (lp.verticalWeight &gt; <span class="number">0.0f</span>) &#123;</div><div class="line">					height += (<span class="keyword">int</span>) ((mHeight - height) * lp.verticalWeight);</div><div class="line">					childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(height,</div><div class="line">							MeasureSpec.EXACTLY);</div><div class="line">					measureAgain = <span class="keyword">true</span>;</div><div class="line">				&#125;</div><div class="line"></div><div class="line">				<span class="keyword">if</span> (measureAgain) &#123;</div><div class="line">					<span class="keyword">if</span> (DEBUG_LAYOUT) Log.v(TAG,</div><div class="line">							<span class="string">"And hey let's measure once more: width="</span> + width</div><div class="line">							+ <span class="string">" height="</span> + height);</div><div class="line">					performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);</div><div class="line">				&#125;</div><div class="line"></div><div class="line">				layoutRequested = <span class="keyword">true</span>;</div><div class="line">			&#125;</div><div class="line">		&#125;</div><div class="line">	&#125; <span class="keyword">else</span> &#123;</div><div class="line">		...</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	<span class="keyword">final</span> <span class="keyword">boolean</span> didLayout = layoutRequested &amp;&amp; (!mStopped || mReportNextDraw);</div><div class="line">	<span class="keyword">boolean</span> triggerGlobalLayoutListener = didLayout</div><div class="line">			|| mAttachInfo.mRecomputeGlobalAttributes;</div><div class="line">	<span class="keyword">if</span> (didLayout) &#123;</div><div class="line">		performLayout(lp, desiredWindowWidth, desiredWindowHeight);</div><div class="line">	...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面截取了performTraversals的主要相关代码，在其中一般情况下蒋会执行performMeasure、performLayout、performDraw三个方法。调用<strong>performMeasure</strong>方法之前，会先分别对焦点、测量的宽高、View内容的变化情况进行判断，如果变化则会执行performMeasure。接着会检查窗口属性是否包含weight，如果包含蒋会再执行一次performMeasure方法，在之后会设置layoutRequested = true，表示需要重新布局。在执行<strong>performLayout</strong>方法之前，会对didLayout参数进行检查，判断是否请求重新布局，窗口是否停止，是否需要再次绘制，而layoutRequested参数再performMeasure后设置为true，mStopped默认为false，所以将执行performMeasure方法。<strong>performDraw</strong>方法就像在<a href="https://github.com/Idtk/Blog/blob/master/Blog/9%E3%80%81Invalidate.md" target="_blank" rel="external">自定义View——invalidate流程分析</a>中分析的一样，蒋会执行，但是在ViewRootImpl#draw中进行dirty判断时，会发现dirty为空，所以不会继续执行绘制过程。那么一般情况下的进行requestLayout请求后，view的重新绘制在什么地方呢？这将会在稍后的layout过程中看到答案。</p>
+<h2 id="二、测量流程"><a href="#二、测量流程" class="headerlink" title="二、测量流程"></a>二、测量流程</h2><p>在查看performMeasure的源码之前，我们先看看传入performMeasure的两个参数childWidthMeasureSpec, childHeightMeasureSpec的获取，代码中可以看出参数是通过调用getRootMeasureSpec方法来获得，现在来看下getRootMeasureSpec的源码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">getRootMeasureSpec</span><span class="params">(<span class="keyword">int</span> windowSize, <span class="keyword">int</span> rootDimension)</span> </span>&#123;</div><div class="line">    <span class="keyword">int</span> measureSpec;</div><div class="line">    <span class="keyword">switch</span> (rootDimension) &#123;</div><div class="line">    <span class="keyword">case</span> ViewGroup.LayoutParams.MATCH_PARENT:</div><div class="line">        <span class="comment">// Window can't resize. Force root view to be windowSize.</span></div><div class="line">        measureSpec = MeasureSpec.makeMeasureSpec(windowSize, MeasureSpec.EXACTLY);</div><div class="line">        <span class="keyword">break</span>;</div><div class="line">    <span class="keyword">case</span> ViewGroup.LayoutParams.WRAP_CONTENT:</div><div class="line">        <span class="comment">// Window can resize. Set max size for root view.</span></div><div class="line">        measureSpec = MeasureSpec.makeMeasureSpec(windowSize, MeasureSpec.AT_MOST);</div><div class="line">        <span class="keyword">break</span>;</div><div class="line">    <span class="keyword">default</span>:</div><div class="line">        <span class="comment">// Window wants to be an exact size. Force root view to be that size.</span></div><div class="line">        measureSpec = MeasureSpec.makeMeasureSpec(rootDimension, MeasureSpec.EXACTLY);</div><div class="line">        <span class="keyword">break</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> measureSpec;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>通过上述getRootMeasureSpec的代码，就可以清楚的看出LayoutParams与测量模式的对应关系。<br></p>
+<table>
+<thead>
+<tr>
+<th>LayoutParams</th>
+<th style="text-align:center">Mode</th>
+<th>size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MATCH_PARENT</td>
+<td style="text-align:center">EXACTLY</td>
+<td>windowSize</td>
+</tr>
+<tr>
+<td>WRAP_CONTENT</td>
+<td style="text-align:center">AT_MOST</td>
+<td>windowSize</td>
+</tr>
+<tr>
+<td>固定大小</td>
+<td style="text-align:center">EXACTLY</td>
+<td>rootSize</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p>我们继续看看performMeasure方法<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">performMeasure</span><span class="params">(<span class="keyword">int</span> childWidthMeasureSpec, <span class="keyword">int</span> childHeightMeasureSpec)</span> </span>&#123;</div><div class="line">    Trace.traceBegin(Trace.TRACE_TAG_VIEW, <span class="string">"measure"</span>);</div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line">        mView.measure(childWidthMeasureSpec, childHeightMeasureSpec);</div><div class="line">    &#125; <span class="keyword">finally</span> &#123;</div><div class="line">        Trace.traceEnd(Trace.TRACE_TAG_VIEW);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>从上述代码可以看出，将会执行View的measure方法，measure方法中将会执行onMeasure方法，ViewRootImpl的调用的view为DecorView(DecorView为布局的顶层view),现在来看看DecorView#onMeasure方法<br><br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onMeasure</span><span class="params">(<span class="keyword">int</span> widthMeasureSpec, <span class="keyword">int</span> heightMeasureSpec)</span> </span>&#123;</div><div class="line">    <span class="keyword">final</span> DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();</div><div class="line">    <span class="keyword">final</span> <span class="keyword">boolean</span> isPortrait = metrics.widthPixels &lt; metrics.heightPixels;</div><div class="line">    <span class="keyword">final</span> <span class="keyword">int</span> widthMode = getMode(widthMeasureSpec);</div><div class="line">    <span class="keyword">final</span> <span class="keyword">int</span> heightMode = getMode(heightMeasureSpec);</div><div class="line">    <span class="keyword">boolean</span> fixedWidth = <span class="keyword">false</span>;</div><div class="line">    <span class="keyword">if</span> (widthMode == AT_MOST) &#123;</div><div class="line">        <span class="keyword">final</span> TypedValue tvw = isPortrait ? mFixedWidthMinor : mFixedWidthMajor;</div><div class="line">		<span class="comment">// tvw不会为NULL，等级也不会为NULL，具体原因可以跟踪一下源码。</span></div><div class="line">        <span class="keyword">if</span> (tvw != <span class="keyword">null</span> &amp;&amp; tvw.type != TypedValue.TYPE_NULL) &#123;</div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> w;</div><div class="line">			<span class="comment">// 获取视图宽度</span></div><div class="line">            <span class="keyword">if</span> (tvw.type == TypedValue.TYPE_DIMENSION) &#123;</div><div class="line">                w = (<span class="keyword">int</span>) tvw.getDimension(metrics);</div><div class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (tvw.type == TypedValue.TYPE_FRACTION) &#123;</div><div class="line">                w = (<span class="keyword">int</span>) tvw.getFraction(metrics.widthPixels, metrics.widthPixels);</div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                w = <span class="number">0</span>;</div><div class="line">            &#125;</div><div class="line">			<span class="comment">// 设置测量模式为EXACTLY</span></div><div class="line">            <span class="keyword">if</span> (w &gt; <span class="number">0</span>) &#123;</div><div class="line">                <span class="keyword">final</span> <span class="keyword">int</span> widthSize = MeasureSpec.getSize(widthMeasureSpec);</div><div class="line">                widthMeasureSpec = MeasureSpec.makeMeasureSpec(</div><div class="line">                        Math.min(w, widthSize), EXACTLY);</div><div class="line">                fixedWidth = <span class="keyword">true</span>;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">	<span class="comment">// heightMode的处理方式与widthMode相同</span></div><div class="line">    <span class="keyword">if</span> (heightMode == AT_MOST) &#123;</div><div class="line">        ...</div><div class="line">    &#125;</div><div class="line">    ...</div><div class="line">    <span class="keyword">super</span>.onMeasure(widthMeasureSpec, heightMeasureSpec);</div><div class="line">	...</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上述代码中，将会分别检查宽高测量模式，这里以宽度测量属性为例，首先检查测量模式是否为AT_MOST，如果是，则获取视图的宽度，然后与宽度测量属性的大小取小，接着与测量模式EXACTLY，作为MeasureSpec.makeMeasureSpec方法的参数一起生成新的宽度测量属性。之后会把新生成的测量属性传递给DecorView的父类，也就是FrameLayout的onMeasure方法继续处理。我们来看看它是怎么做的。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onMeasure</span><span class="params">(<span class="keyword">int</span> widthMeasureSpec, <span class="keyword">int</span> heightMeasureSpec)</span> </span>&#123;</div><div class="line">    <span class="keyword">int</span> count = getChildCount();</div><div class="line">    <span class="keyword">final</span> <span class="keyword">boolean</span> measureMatchParentChildren =</div><div class="line">            MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.EXACTLY ||</div><div class="line">            MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.EXACTLY;</div><div class="line">    mMatchParentChildren.clear();</div><div class="line">    <span class="keyword">int</span> maxHeight = <span class="number">0</span>;</div><div class="line">    <span class="keyword">int</span> maxWidth = <span class="number">0</span>;</div><div class="line">    <span class="keyword">int</span> childState = <span class="number">0</span>;</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</div><div class="line">        <span class="keyword">final</span> View child = getChildAt(i);</div><div class="line">        <span class="keyword">if</span> (mMeasureAllChildren || child.getVisibility() != GONE) &#123;</div><div class="line">            measureChildWithMargins(child, widthMeasureSpec, <span class="number">0</span>, heightMeasureSpec, <span class="number">0</span>);</div><div class="line">            <span class="keyword">final</span> LayoutParams lp = (LayoutParams) child.getLayoutParams();</div><div class="line">			<span class="comment">// 获取子view中最大的宽度和高度</span></div><div class="line">            maxWidth = Math.max(maxWidth,</div><div class="line">                    child.getMeasuredWidth() + lp.leftMargin + lp.rightMargin);</div><div class="line">            maxHeight = Math.max(maxHeight,</div><div class="line">                    child.getMeasuredHeight() + lp.topMargin + lp.bottomMargin);</div><div class="line">            childState = combineMeasuredStates(childState, child.getMeasuredState());</div><div class="line">            <span class="keyword">if</span> (measureMatchParentChildren) &#123;</div><div class="line">				<span class="comment">// 如果子View的宽or高为MATCH_PARENT，则保存子View</span></div><div class="line">                <span class="keyword">if</span> (lp.width == LayoutParams.MATCH_PARENT ||</div><div class="line">                        lp.height == LayoutParams.MATCH_PARENT) &#123;</div><div class="line">                    mMatchParentChildren.add(child);</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">// Account for padding too</span></div><div class="line">    maxWidth += getPaddingLeftWithForeground() + getPaddingRightWithForeground();</div><div class="line">    maxHeight += getPaddingTopWithForeground() + getPaddingBottomWithForeground();</div><div class="line">    <span class="comment">// Check against our minimum height and width</span></div><div class="line">    maxHeight = Math.max(maxHeight, getSuggestedMinimumHeight());</div><div class="line">    maxWidth = Math.max(maxWidth, getSuggestedMinimumWidth());</div><div class="line">    <span class="comment">// Check against our foreground's minimum height and width</span></div><div class="line">    <span class="keyword">final</span> Drawable drawable = getForeground();</div><div class="line">    <span class="keyword">if</span> (drawable != <span class="keyword">null</span>) &#123;</div><div class="line">        maxHeight = Math.max(maxHeight, drawable.getMinimumHeight());</div><div class="line">        maxWidth = Math.max(maxWidth, drawable.getMinimumWidth());</div><div class="line">    &#125;</div><div class="line">	<span class="comment">// 保存测量结果</span></div><div class="line">    setMeasuredDimension(resolveSizeAndState(maxWidth, widthMeasureSpec, childState),</div><div class="line">            resolveSizeAndState(maxHeight, heightMeasureSpec,</div><div class="line">                    childState &lt;&lt; MEASURED_HEIGHT_STATE_SHIFT));</div><div class="line">    count = mMatchParentChildren.size();</div><div class="line">	<span class="comment">// 对之前保存的子view，分别重新测量MeasureSpec</span></div><div class="line">    <span class="keyword">if</span> (count &gt; <span class="number">1</span>) &#123;</div><div class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</div><div class="line">            <span class="keyword">final</span> View child = mMatchParentChildren.get(i);</div><div class="line">            <span class="keyword">final</span> MarginLayoutParams lp = (MarginLayoutParams) child.getLayoutParams();</div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> childWidthMeasureSpec;</div><div class="line">            <span class="keyword">if</span> (lp.width == LayoutParams.MATCH_PARENT) &#123;</div><div class="line">                <span class="keyword">final</span> <span class="keyword">int</span> width = Math.max(<span class="number">0</span>, getMeasuredWidth()</div><div class="line">                        - getPaddingLeftWithForeground() - getPaddingRightWithForeground()</div><div class="line">                        - lp.leftMargin - lp.rightMargin);</div><div class="line">                childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(</div><div class="line">                        width, MeasureSpec.EXACTLY);</div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                childWidthMeasureSpec = getChildMeasureSpec(widthMeasureSpec,</div><div class="line">                        getPaddingLeftWithForeground() + getPaddingRightWithForeground() +</div><div class="line">                        lp.leftMargin + lp.rightMargin,</div><div class="line">                        lp.width);</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> childHeightMeasureSpec;</div><div class="line">            <span class="keyword">if</span> (lp.height == LayoutParams.MATCH_PARENT) &#123;</div><div class="line">                <span class="keyword">final</span> <span class="keyword">int</span> height = Math.max(<span class="number">0</span>, getMeasuredHeight()</div><div class="line">                        - getPaddingTopWithForeground() - getPaddingBottomWithForeground()</div><div class="line">                        - lp.topMargin - lp.bottomMargin);</div><div class="line">                childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(</div><div class="line">                        height, MeasureSpec.EXACTLY);</div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                childHeightMeasureSpec = getChildMeasureSpec(heightMeasureSpec,</div><div class="line">                        getPaddingTopWithForeground() + getPaddingBottomWithForeground() +</div><div class="line">                        lp.topMargin + lp.bottomMargin,</div><div class="line">                        lp.height);</div><div class="line">            &#125;</div><div class="line">			<span class="comment">// 测量子View</span></div><div class="line">            child.measure(childWidthMeasureSpec, childHeightMeasureSpec);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>FrameLayout的测量过程中，首先遍历子View，调用measureChildWithMargins方法，之后获取子view中的最大宽度or高度，这是因为FrameLayout的布局，如果在wrap_content的情况下，其宽度就等于所以子View中的最大宽度，高度就等于所以子View中最大的高度。然后对子View的宽or高为MATCH_PARENT的View进行存储。之后处理一些属性，保存测量结果。resolveSizeAndState方法，我已经在之前的<a href="https://github.com/Idtk/Blog/blob/master/Blog/7%E3%80%81RadarChart.md" target="_blank" rel="external">自定义View——雷达图(蜘蛛网图)</a>中进行过分析。最后就是对之前保存的子view进行处理了。从measureChildWithMargins方法的参数可以看出，测量值与view的测量值以及子view相关，现在我们来看下它的测量过程<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">measureChildWithMargins</span><span class="params">(View child,</span></span></div><div class="line">        <span class="keyword">int</span> parentWidthMeasureSpec, <span class="keyword">int</span> widthUsed,</div><div class="line">        <span class="keyword">int</span> parentHeightMeasureSpec, <span class="keyword">int</span> heightUsed) &#123;</div><div class="line">    <span class="keyword">final</span> MarginLayoutParams lp = (MarginLayoutParams) child.getLayoutParams();</div><div class="line">    <span class="keyword">final</span> <span class="keyword">int</span> childWidthMeasureSpec = getChildMeasureSpec(parentWidthMeasureSpec,</div><div class="line">            mPaddingLeft + mPaddingRight + lp.leftMargin + lp.rightMargin</div><div class="line">                    + widthUsed, lp.width);</div><div class="line">    <span class="keyword">final</span> <span class="keyword">int</span> childHeightMeasureSpec = getChildMeasureSpec(parentHeightMeasureSpec,</div><div class="line">            mPaddingTop + mPaddingBottom + lp.topMargin + lp.bottomMargin</div><div class="line">                    + heightUsed, lp.height);</div><div class="line">    child.measure(childWidthMeasureSpec, childHeightMeasureSpec);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上述方法中，会先调用getChildMeasureSpec方法，获取测量的宽高属性之后，最后对子View进行测量。由代码可以看出测量属性的获取与父view的MeasureSpec、View的padding、子View的LayoutParams相关，具体的关系我们来看看ViewGroup的getChildMeasureSpec方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">getChildMeasureSpec</span><span class="params">(<span class="keyword">int</span> spec, <span class="keyword">int</span> padding, <span class="keyword">int</span> childDimension)</span> </span>&#123;</div><div class="line">    <span class="keyword">int</span> specMode = MeasureSpec.getMode(spec);</div><div class="line">    <span class="keyword">int</span> specSize = MeasureSpec.getSize(spec);</div><div class="line">    <span class="keyword">int</span> size = Math.max(<span class="number">0</span>, specSize - padding);</div><div class="line">    <span class="keyword">int</span> resultSize = <span class="number">0</span>;</div><div class="line">    <span class="keyword">int</span> resultMode = <span class="number">0</span>;</div><div class="line">    <span class="keyword">switch</span> (specMode) &#123;</div><div class="line">    <span class="comment">// Parent has imposed an exact size on us</span></div><div class="line">    <span class="keyword">case</span> MeasureSpec.EXACTLY:</div><div class="line">        <span class="keyword">if</span> (childDimension &gt;= <span class="number">0</span>) &#123;</div><div class="line">            resultSize = childDimension;</div><div class="line">            resultMode = MeasureSpec.EXACTLY;</div><div class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (childDimension == LayoutParams.MATCH_PARENT) &#123;</div><div class="line">            <span class="comment">// Child wants to be our size. So be it.</span></div><div class="line">            resultSize = size;</div><div class="line">            resultMode = MeasureSpec.EXACTLY;</div><div class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (childDimension == LayoutParams.WRAP_CONTENT) &#123;</div><div class="line">            <span class="comment">// Child wants to determine its own size. It can't be</span></div><div class="line">            <span class="comment">// bigger than us.</span></div><div class="line">            resultSize = size;</div><div class="line">            resultMode = MeasureSpec.AT_MOST;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">break</span>;</div><div class="line">    <span class="comment">// Parent has imposed a maximum size on us</span></div><div class="line">    <span class="keyword">case</span> MeasureSpec.AT_MOST:</div><div class="line">        <span class="keyword">if</span> (childDimension &gt;= <span class="number">0</span>) &#123;</div><div class="line">            <span class="comment">// Child wants a specific size... so be it</span></div><div class="line">            resultSize = childDimension;</div><div class="line">            resultMode = MeasureSpec.EXACTLY;</div><div class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (childDimension == LayoutParams.MATCH_PARENT) &#123;</div><div class="line">            <span class="comment">// Child wants to be our size, but our size is not fixed.</span></div><div class="line">            <span class="comment">// Constrain child to not be bigger than us.</span></div><div class="line">            resultSize = size;</div><div class="line">            resultMode = MeasureSpec.AT_MOST;</div><div class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (childDimension == LayoutParams.WRAP_CONTENT) &#123;</div><div class="line">            <span class="comment">// Child wants to determine its own size. It can't be</span></div><div class="line">            <span class="comment">// bigger than us.</span></div><div class="line">            resultSize = size;</div><div class="line">            resultMode = MeasureSpec.AT_MOST;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">break</span>;</div><div class="line">    <span class="comment">// Parent asked to see how big we want to be</span></div><div class="line">    <span class="keyword">case</span> MeasureSpec.UNSPECIFIED:</div><div class="line">        <span class="keyword">if</span> (childDimension &gt;= <span class="number">0</span>) &#123;</div><div class="line">            <span class="comment">// Child wants a specific size... let him have it</span></div><div class="line">            resultSize = childDimension;</div><div class="line">            resultMode = MeasureSpec.EXACTLY;</div><div class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (childDimension == LayoutParams.MATCH_PARENT) &#123;</div><div class="line">            <span class="comment">// Child wants to be our size... find out how big it should</span></div><div class="line">            <span class="comment">// be</span></div><div class="line">            resultSize = View.sUseZeroUnspecifiedMeasureSpec ? <span class="number">0</span> : size;</div><div class="line">            resultMode = MeasureSpec.UNSPECIFIED;</div><div class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (childDimension == LayoutParams.WRAP_CONTENT) &#123;</div><div class="line">            <span class="comment">// Child wants to determine its own size.... find out how</span></div><div class="line">            <span class="comment">// big it should be</span></div><div class="line">            resultSize = View.sUseZeroUnspecifiedMeasureSpec ? <span class="number">0</span> : size;</div><div class="line">            resultMode = MeasureSpec.UNSPECIFIED;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">break</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> MeasureSpec.makeMeasureSpec(resultSize, resultMode);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上述方法并不难，写的如此有规律，它主要是根据View的MeasureSpec与子View的LayoutParams参数来确定子View的MeasureSpec属性。接下来，我们为getChildMeasureSpec方法的逻辑建立一个表格。<br><br><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/old/getChildMeasureSpec.png" alt="getChildMeasureSpec" title="getChildMeasureSpec" width="800"><br><br><br></p>
+<p>现在我们回到measureChildWithMargins方法，测量完成之后，就是对子View的测量，DecorView的子View就是我们平时setContentView中的布局，这里以LinearLayout为例。自然也是和之前一样LinearLayout的measure调用onMeasure，直接来看看LinearLayout#onMeasure<br><br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onMeasure</span><span class="params">(<span class="keyword">int</span> widthMeasureSpec, <span class="keyword">int</span> heightMeasureSpec)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (mOrientation == VERTICAL) &#123;</div><div class="line">        measureVertical(widthMeasureSpec, heightMeasureSpec);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        measureHorizontal(widthMeasureSpec, heightMeasureSpec);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上述代码可以看出，LinearLayout将根据属性来选择一种测量方式，我们选择LinearLayout的水平布局的测量方式，即measureHorizontal，这里简单的挑选其中的主要部分说明一下<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">measureHorizontal</span><span class="params">(<span class="keyword">int</span> widthMeasureSpec, <span class="keyword">int</span> heightMeasureSpec)</span> </span>&#123;</div><div class="line">	...</div><div class="line">	<span class="comment">// See how wide everyone is. Also remember max height.</span></div><div class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; ++i) &#123;</div><div class="line">		<span class="keyword">final</span> View child = getVirtualChildAt(i);</div><div class="line">		...</div><div class="line">		<span class="keyword">final</span> LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams)</div><div class="line">				child.getLayoutParams();</div><div class="line">		<span class="comment">// 计算比重</span></div><div class="line">		totalWeight += lp.weight;</div><div class="line"></div><div class="line">		<span class="keyword">if</span> (widthMode == MeasureSpec.EXACTLY &amp;&amp; lp.width == <span class="number">0</span> &amp;&amp; lp.weight &gt; <span class="number">0</span>) &#123;</div><div class="line">			<span class="comment">// Optimization: don't bother measuring children who are going to use</span></div><div class="line">			<span class="comment">// leftover space. These views will get measured again down below if</span></div><div class="line">			<span class="comment">// there is any leftover space.</span></div><div class="line">			<span class="keyword">if</span> (isExactly) &#123;</div><div class="line">				mTotalLength += lp.leftMargin + lp.rightMargin;</div><div class="line">			&#125; <span class="keyword">else</span> &#123;</div><div class="line">				<span class="keyword">final</span> <span class="keyword">int</span> totalLength = mTotalLength;</div><div class="line">				mTotalLength = Math.max(totalLength, totalLength +</div><div class="line">						lp.leftMargin + lp.rightMargin);</div><div class="line">			&#125;</div><div class="line">			...</div><div class="line">		&#125; <span class="keyword">else</span> &#123;</div><div class="line">			<span class="keyword">int</span> oldWidth = Integer.MIN_VALUE;</div><div class="line">			<span class="comment">//子View宽度为0，有weight，LayoutParams为WRAP_CONTENT，</span></div><div class="line">			<span class="comment">//转换父view的LayoutParams为WRAP_CONTENT</span></div><div class="line">			<span class="keyword">if</span> (lp.width == <span class="number">0</span> &amp;&amp; lp.weight &gt; <span class="number">0</span>) &#123;</div><div class="line">				<span class="comment">// widthMode is either UNSPECIFIED or AT_MOST, and this</span></div><div class="line">				<span class="comment">// child</span></div><div class="line">				<span class="comment">// wanted to stretch to fill available space. Translate that to</span></div><div class="line">				<span class="comment">// WRAP_CONTENT so that it does not end up with a width of 0</span></div><div class="line">				oldWidth = <span class="number">0</span>;</div><div class="line">				lp.width = LayoutParams.WRAP_CONTENT;</div><div class="line">			&#125;</div><div class="line"></div><div class="line">			<span class="comment">// Determine how big this child would like to be. If this or</span></div><div class="line">			<span class="comment">// previous children have given a weight, then we allow it to</span></div><div class="line">			<span class="comment">// use all available space (and we will shrink things later</span></div><div class="line">			<span class="comment">// if needed).</span></div><div class="line">			<span class="comment">// 测量子View，调用之前说的measureChildWithMargins()方法</span></div><div class="line">			measureChildBeforeLayout(child, i, widthMeasureSpec,</div><div class="line">					totalWeight == <span class="number">0</span> ? mTotalLength : <span class="number">0</span>,</div><div class="line">					heightMeasureSpec, <span class="number">0</span>);</div><div class="line">			...</div><div class="line">		&#125;</div><div class="line">		...</div><div class="line">	&#125;</div><div class="line">	...</div><div class="line"></div><div class="line">	<span class="comment">// Add in our padding</span></div><div class="line">	<span class="comment">//处理padding</span></div><div class="line">	mTotalLength += mPaddingLeft + mPaddingRight;</div><div class="line"></div><div class="line">	<span class="keyword">int</span> widthSize = mTotalLength;</div><div class="line"></div><div class="line">	<span class="comment">// Check against our minimum width</span></div><div class="line">	<span class="comment">//view高度与背景尺寸和mMinWidth的运算结果比较，取最大值</span></div><div class="line">	widthSize = Math.max(widthSize, getSuggestedMinimumWidth());</div><div class="line"></div><div class="line">	<span class="comment">// Reconcile our calculated size with the widthMeasureSpec</span></div><div class="line">	<span class="comment">// MEASURED_SIZE_MASK = 0x00ffffff，取得测量属性的后30位，即尺寸</span></div><div class="line">	<span class="keyword">int</span> widthSizeAndState = resolveSizeAndState(widthSize, widthMeasureSpec, <span class="number">0</span>);</div><div class="line">	widthSize = widthSizeAndState &amp; MEASURED_SIZE_MASK;</div><div class="line"></div><div class="line">	<span class="comment">// Either expand children with weight to take up available space or</span></div><div class="line">	<span class="comment">// shrink them if they extend beyond our current bounds. If we skipped</span></div><div class="line">	<span class="comment">// measurement on any children, we need to measure them now.</span></div><div class="line">	<span class="keyword">int</span> delta = widthSize - mTotalLength;</div><div class="line">	<span class="keyword">if</span> (skippedMeasure || delta != <span class="number">0</span> &amp;&amp; totalWeight &gt; <span class="number">0.0f</span>) &#123;</div><div class="line">		<span class="keyword">float</span> weightSum = mWeightSum &gt; <span class="number">0.0f</span> ? mWeightSum : totalWeight;</div><div class="line"></div><div class="line">		maxAscent[<span class="number">0</span>] = maxAscent[<span class="number">1</span>] = maxAscent[<span class="number">2</span>] = maxAscent[<span class="number">3</span>] = -<span class="number">1</span>;</div><div class="line">		maxDescent[<span class="number">0</span>] = maxDescent[<span class="number">1</span>] = maxDescent[<span class="number">2</span>] = maxDescent[<span class="number">3</span>] = -<span class="number">1</span>;</div><div class="line">		maxHeight = -<span class="number">1</span>;</div><div class="line"></div><div class="line">		mTotalLength = <span class="number">0</span>;</div><div class="line"></div><div class="line">		<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; ++i) &#123;</div><div class="line">			<span class="keyword">final</span> View child = getVirtualChildAt(i);</div><div class="line"></div><div class="line">			<span class="keyword">if</span> (child == <span class="keyword">null</span> || child.getVisibility() == View.GONE) &#123;</div><div class="line">				<span class="keyword">continue</span>;</div><div class="line">			&#125;</div><div class="line"></div><div class="line">			<span class="keyword">final</span> LinearLayout.LayoutParams lp =</div><div class="line">					(LinearLayout.LayoutParams) child.getLayoutParams();</div><div class="line"></div><div class="line">			<span class="keyword">float</span> childExtra = lp.weight;</div><div class="line">			<span class="keyword">if</span> (childExtra &gt; <span class="number">0</span>) &#123;</div><div class="line">				<span class="comment">// Child said it could absorb extra space -- give him his share</span></div><div class="line">				<span class="comment">// 高度 = 子View的weight*剩余高度/总weight</span></div><div class="line">				<span class="keyword">int</span> share = (<span class="keyword">int</span>) (childExtra * delta / weightSum);</div><div class="line">				weightSum -= childExtra;</div><div class="line">				delta -= share;</div><div class="line">				<span class="comment">//测量子View</span></div><div class="line">				<span class="keyword">final</span> <span class="keyword">int</span> childHeightMeasureSpec = getChildMeasureSpec(</div><div class="line">						heightMeasureSpec,</div><div class="line">						mPaddingTop + mPaddingBottom + lp.topMargin + lp.bottomMargin,</div><div class="line">						lp.height);</div><div class="line"></div><div class="line">				<span class="comment">// <span class="doctag">TODO:</span> Use a field like lp.isMeasured to figure out if this</span></div><div class="line">				<span class="comment">// child has been previously measured</span></div><div class="line">				<span class="keyword">if</span> ((lp.width != <span class="number">0</span>) || (widthMode != MeasureSpec.EXACTLY)) &#123;</div><div class="line">					<span class="comment">// child was measured once already above ... base new measurement</span></div><div class="line">					<span class="comment">// on stored values</span></div><div class="line">					<span class="keyword">int</span> childWidth = child.getMeasuredWidth() + share;</div><div class="line">					<span class="keyword">if</span> (childWidth &lt; <span class="number">0</span>) &#123;</div><div class="line">						childWidth = <span class="number">0</span>;</div><div class="line">					&#125;</div><div class="line"></div><div class="line">					child.measure(</div><div class="line">						MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY),</div><div class="line">						childHeightMeasureSpec);</div><div class="line">				&#125; <span class="keyword">else</span> &#123;</div><div class="line">					<span class="comment">// child was skipped in the loop above. Measure for this first time here</span></div><div class="line">					child.measure(MeasureSpec.makeMeasureSpec(</div><div class="line">							share &gt; <span class="number">0</span> ? share : <span class="number">0</span>, MeasureSpec.EXACTLY),</div><div class="line">							childHeightMeasureSpec);</div><div class="line">				&#125;</div><div class="line">		...</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上述代码，在关键部分增加了一些注释，这里再简单说一下，遍历子View，计算下当前的比重，之后调用measureChildBeforeLayout方法，这个方法将会调用我们之前说的measureChildWithMargins()方法，来完成对子View的测量。接下来用view当前宽度与背景宽度和mMinWidth的运算结果比较，取最大值；再使用resolveSizeAndState(<a href="https://github.com/Idtk/Blog/blob/master/Blog/7%E3%80%81RadarChart.md" target="_blank" rel="external">自定义View——雷达图(蜘蛛网图)</a>)方法获取测量属性，之后与MEASURED_SIZE_MASK按位与获取view的宽度值。然后再按照weight的属性，对view的剩余宽度进行分配，之后调用getChildMeasureSpec方法进行测量值获取。最后依旧使用child.measure方法，继续对子View进行测量。<br></p>
+<p>现在测量流程到了LinearLayout的子View，我们这里假设是一个View。自然也是调用View的measure方法，之后调用onMeasure方法<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onMeasure</span><span class="params">(<span class="keyword">int</span> widthMeasureSpec, <span class="keyword">int</span> heightMeasureSpec)</span> </span>&#123;</div><div class="line">    setMeasuredDimension(getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec),</div><div class="line">            getDefaultSize(getSuggestedMinimumHeight(), heightMeasureSpec));</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上述代码就是默认的View测量方法，其中setMeasuredDimension将会设置View的测量值，这里需要关注的是getDefaultSize方法，这在我之前的文章<a href="https://github.com/Idtk/Blog/blob/master/Blog/7%E3%80%81RadarChart.md" target="_blank" rel="external">自定义View——雷达图(蜘蛛网图)</a>，已经进行了分析。但是getDefaultSize方法一般是无法满足我们对LayoutParams = wrap_content情况下的测量要求的，需要我们自己进行一定的修改。<br></p>
+<p>现在已经完成了整个View的测量过程，在整个测量的过程中，我们不断的通过child.measure对子View进行测量，而测量值的获取主要根据View的MeasureSpec、padding，子View的size、LayoutParams、margin以及View的自身特性(比如weight)等属性来完成，这也是我们自己在自定义View时，编写onMeaure方法的主要方式。</p>
+<h2 id="三、布局流程"><a href="#三、布局流程" class="headerlink" title="三、布局流程"></a>三、布局流程</h2><p>接着第一节的结尾，Layout流程的分析从ViewRootImpl的performLayout开始<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">performLayout</span><span class="params">(WindowManager.LayoutParams lp, <span class="keyword">int</span> desiredWindowWidth,</span></span></div><div class="line">		<span class="keyword">int</span> desiredWindowHeight) &#123;</div><div class="line">	mLayoutRequested = <span class="keyword">false</span>;</div><div class="line">	mScrollMayChange = <span class="keyword">true</span>;</div><div class="line">	mInLayout = <span class="keyword">true</span>;</div><div class="line"></div><div class="line">	<span class="keyword">final</span> View host = mView;</div><div class="line">	Trace.traceBegin(Trace.TRACE_TAG_VIEW, <span class="string">"layout"</span>);</div><div class="line">	<span class="keyword">try</span> &#123;</div><div class="line">		host.layout(<span class="number">0</span>, <span class="number">0</span>, host.getMeasuredWidth(), host.getMeasuredHeight());</div><div class="line">		...</div><div class="line">	&#125; <span class="keyword">finally</span> &#123;</div><div class="line">		Trace.traceEnd(Trace.TRACE_TAG_VIEW);</div><div class="line">	&#125;</div><div class="line">	mInLayout = <span class="keyword">false</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>布局流程中View的组成和测量流程中一样(DecorView→LinearLayout→View)，上述代码，调用了DecorView的layout方法(即View的layout方法)，并传入了参数。left、top传入0，rigth传入host.getMeasuredWidth()，bottom传入host.getMeasuredHeight()。接着来看看layout方法<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">layout</span><span class="params">(<span class="keyword">int</span> l, <span class="keyword">int</span> t, <span class="keyword">int</span> r, <span class="keyword">int</span> b)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> ((mPrivateFlags3 &amp; PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT) != <span class="number">0</span>) &#123;</div><div class="line">        onMeasure(mOldWidthMeasureSpec, mOldHeightMeasureSpec);</div><div class="line">        mPrivateFlags3 &amp;= ~PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">int</span> oldL = mLeft;</div><div class="line">    <span class="keyword">int</span> oldT = mTop;</div><div class="line">    <span class="keyword">int</span> oldB = mBottom;</div><div class="line">    <span class="keyword">int</span> oldR = mRight;</div><div class="line">	<span class="comment">// 这里会判断要不要invalidate</span></div><div class="line">    <span class="keyword">boolean</span> changed = isLayoutModeOptical(mParent) ?</div><div class="line">            setOpticalFrame(l, t, r, b) : setFrame(l, t, r, b);</div><div class="line">	<span class="comment">// 验证PFLAG_LAYOUT_REQUIRED标记</span></div><div class="line">    <span class="keyword">if</span> (changed || (mPrivateFlags &amp; PFLAG_LAYOUT_REQUIRED) == PFLAG_LAYOUT_REQUIRED) &#123;</div><div class="line">		<span class="comment">// 需要自定义的确定子布局方法</span></div><div class="line">        onLayout(changed, l, t, r, b);</div><div class="line">		<span class="comment">// 去除measure时增加的标记</span></div><div class="line">        mPrivateFlags &amp;= ~PFLAG_LAYOUT_REQUIRED;</div><div class="line">        ListenerInfo li = mListenerInfo;</div><div class="line">        <span class="keyword">if</span> (li != <span class="keyword">null</span> &amp;&amp; li.mOnLayoutChangeListeners != <span class="keyword">null</span>) &#123;</div><div class="line">            ArrayList&lt;OnLayoutChangeListener&gt; listenersCopy =</div><div class="line">                    (ArrayList&lt;OnLayoutChangeListener&gt;)li.mOnLayoutChangeListeners.clone();</div><div class="line">            <span class="keyword">int</span> numListeners = listenersCopy.size();</div><div class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; numListeners; ++i) &#123;</div><div class="line">                listenersCopy.get(i).onLayoutChange(<span class="keyword">this</span>, l, t, r, b, oldL, oldT, oldR, oldB);</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">	<span class="comment">// 去除在requestLayout中增加的标记</span></div><div class="line">    mPrivateFlags &amp;= ~PFLAG_FORCE_LAYOUT;</div><div class="line">    mPrivateFlags3 |= PFLAG3_IS_LAID_OUT;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上述代码在主要部分都进行了注释，这里主要看下setFrame方法，使用这个方法传入l, t, r, b，用于确定view在父View中的位置。setOpticalFrame方法最终也会调用setFrame，我们来看下setFrame方法<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">setFrame</span><span class="params">(<span class="keyword">int</span> left, <span class="keyword">int</span> top, <span class="keyword">int</span> right, <span class="keyword">int</span> bottom)</span> </span>&#123;</div><div class="line">    <span class="keyword">boolean</span> changed = <span class="keyword">false</span>;</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (mLeft != left || mRight != right || mTop != top || mBottom != bottom) &#123;</div><div class="line">        changed = <span class="keyword">true</span>;</div><div class="line">        <span class="comment">// Remember our drawn bit</span></div><div class="line">        <span class="keyword">int</span> drawn = mPrivateFlags &amp; PFLAG_DRAWN;</div><div class="line">        <span class="keyword">int</span> oldWidth = mRight - mLeft;</div><div class="line">        <span class="keyword">int</span> oldHeight = mBottom - mTop;</div><div class="line">        <span class="keyword">int</span> newWidth = right - left;</div><div class="line">        <span class="keyword">int</span> newHeight = bottom - top;</div><div class="line">        <span class="keyword">boolean</span> sizeChanged = (newWidth != oldWidth) || (newHeight != oldHeight);</div><div class="line">        <span class="comment">// Invalidate our old position</span></div><div class="line">        invalidate(sizeChanged);</div><div class="line">        ...</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> changed;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>从上述代码可以看出，在setFrame中我们将会判断新旧的位置参数，如果有一个不相等，则会发起invalidate请求，进行View重绘。看到这里也就明白，为什么在requestLayout之后一般都会进行View重绘了。<br><br>现在继续来看上面的DecorView#layout方法，在判断是否需要invalidate之后，将会进行PFLAG_LAYOUT_REQUIRED标记的验证，之后运行DecorView的onLayout方法，它会对超出的View会进行平移，这个只是提一下，主要关注的是其继承的FrameLayout的onLayout方法<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onLayout</span><span class="params">(<span class="keyword">boolean</span> changed, <span class="keyword">int</span> left, <span class="keyword">int</span> top, <span class="keyword">int</span> right, <span class="keyword">int</span> bottom)</span> </span>&#123;</div><div class="line">	layoutChildren(left, top, right, bottom, <span class="keyword">false</span> <span class="comment">/* no force left gravity */</span>);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">layoutChildren</span><span class="params">(<span class="keyword">int</span> left, <span class="keyword">int</span> top, <span class="keyword">int</span> right, <span class="keyword">int</span> bottom,</span></span></div><div class="line">							  <span class="keyword">boolean</span> forceLeftGravity) &#123;</div><div class="line">	<span class="keyword">final</span> <span class="keyword">int</span> count = getChildCount();</div><div class="line"></div><div class="line">	<span class="keyword">final</span> <span class="keyword">int</span> parentLeft = getPaddingLeftWithForeground();</div><div class="line">	<span class="keyword">final</span> <span class="keyword">int</span> parentRight = right - left - getPaddingRightWithForeground();</div><div class="line"></div><div class="line">	<span class="keyword">final</span> <span class="keyword">int</span> parentTop = getPaddingTopWithForeground();</div><div class="line">	<span class="keyword">final</span> <span class="keyword">int</span> parentBottom = bottom - top - getPaddingBottomWithForeground();</div><div class="line"></div><div class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</div><div class="line">		<span class="keyword">final</span> View child = getChildAt(i);</div><div class="line">		<span class="keyword">if</span> (child.getVisibility() != GONE) &#123;</div><div class="line">			<span class="keyword">final</span> LayoutParams lp = (LayoutParams) child.getLayoutParams();</div><div class="line"></div><div class="line">			<span class="keyword">final</span> <span class="keyword">int</span> width = child.getMeasuredWidth();</div><div class="line">			<span class="keyword">final</span> <span class="keyword">int</span> height = child.getMeasuredHeight();</div><div class="line"></div><div class="line">			<span class="keyword">int</span> childLeft;</div><div class="line">			<span class="keyword">int</span> childTop;</div><div class="line"></div><div class="line">			<span class="keyword">int</span> gravity = lp.gravity;</div><div class="line">			<span class="keyword">if</span> (gravity == -<span class="number">1</span>) &#123;</div><div class="line">				gravity = DEFAULT_CHILD_GRAVITY;</div><div class="line">			&#125;</div><div class="line"></div><div class="line">			<span class="keyword">final</span> <span class="keyword">int</span> layoutDirection = getLayoutDirection();</div><div class="line">			<span class="keyword">final</span> <span class="keyword">int</span> absoluteGravity = Gravity.getAbsoluteGravity(gravity, layoutDirection);</div><div class="line">			<span class="keyword">final</span> <span class="keyword">int</span> verticalGravity = gravity &amp; Gravity.VERTICAL_GRAVITY_MASK;</div><div class="line">			<span class="comment">// 根据不同属性确定子View的位置</span></div><div class="line">			<span class="keyword">switch</span> (absoluteGravity &amp; Gravity.HORIZONTAL_GRAVITY_MASK) &#123;</div><div class="line">				<span class="keyword">case</span> Gravity.CENTER_HORIZONTAL:</div><div class="line">					childLeft = parentLeft + (parentRight - parentLeft - width) / <span class="number">2</span> +</div><div class="line">					lp.leftMargin - lp.rightMargin;</div><div class="line">					<span class="keyword">break</span>;</div><div class="line">				<span class="keyword">case</span> Gravity.RIGHT:</div><div class="line">					<span class="keyword">if</span> (!forceLeftGravity) &#123;</div><div class="line">						childLeft = parentRight - width - lp.rightMargin;</div><div class="line">						<span class="keyword">break</span>;</div><div class="line">					&#125;</div><div class="line">				<span class="keyword">case</span> Gravity.LEFT:</div><div class="line">				<span class="keyword">default</span>:</div><div class="line">					childLeft = parentLeft + lp.leftMargin;</div><div class="line">			&#125;</div><div class="line"></div><div class="line">			<span class="keyword">switch</span> (verticalGravity) &#123;</div><div class="line">				<span class="keyword">case</span> Gravity.TOP:</div><div class="line">					childTop = parentTop + lp.topMargin;</div><div class="line">					<span class="keyword">break</span>;</div><div class="line">				<span class="keyword">case</span> Gravity.CENTER_VERTICAL:</div><div class="line">					childTop = parentTop + (parentBottom - parentTop - height) / <span class="number">2</span> +</div><div class="line">					lp.topMargin - lp.bottomMargin;</div><div class="line">					<span class="keyword">break</span>;</div><div class="line">				<span class="keyword">case</span> Gravity.BOTTOM:</div><div class="line">					childTop = parentBottom - height - lp.bottomMargin;</div><div class="line">					<span class="keyword">break</span>;</div><div class="line">				<span class="keyword">default</span>:</div><div class="line">					childTop = parentTop + lp.topMargin;</div><div class="line">			&#125;</div><div class="line"></div><div class="line">			child.layout(childLeft, childTop, childLeft + width, childTop + height);</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上述代码中，主要是遍历所有子View，根据不同的居中情况(如果设置了居中属性的话)，重新确定子View的left与top布局，之后根据这些位置以及View测量的宽高，确定right、bottom的位置，最后传递给子View的layout方法。这里的子View按照我们之前在measure中的流程，就是LinearLayout，我们来看看他的onLayout方法<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onLayout</span><span class="params">(<span class="keyword">boolean</span> changed, <span class="keyword">int</span> l, <span class="keyword">int</span> t, <span class="keyword">int</span> r, <span class="keyword">int</span> b)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (mOrientation == VERTICAL) &#123;</div><div class="line">        layoutVertical(l, t, r, b);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        layoutHorizontal(l, t, r, b);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>LinearLayout的onLyaout方法和onMeasure的逻辑一样，根据LinearLayout属性来选择布局方法，我们也和上次一样选取layoutHorizontal方法看看，这里截取了其中的主要代码<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">layoutHorizontal</span><span class="params">(<span class="keyword">int</span> left, <span class="keyword">int</span> top, <span class="keyword">int</span> right, <span class="keyword">int</span> bottom)</span> </span>&#123;</div><div class="line">	...</div><div class="line">	<span class="keyword">final</span> <span class="keyword">int</span> count = getVirtualChildCount();</div><div class="line">	...</div><div class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</div><div class="line">		<span class="keyword">int</span> childIndex = start + dir * i;</div><div class="line">		<span class="keyword">final</span> View child = getVirtualChildAt(childIndex);</div><div class="line"></div><div class="line">		<span class="keyword">if</span> (child == <span class="keyword">null</span>) &#123;</div><div class="line">			childLeft += measureNullChild(childIndex);</div><div class="line">		&#125; <span class="keyword">else</span> <span class="keyword">if</span> (child.getVisibility() != GONE) &#123;</div><div class="line">			<span class="keyword">final</span> <span class="keyword">int</span> childWidth = child.getMeasuredWidth();</div><div class="line">			<span class="keyword">final</span> <span class="keyword">int</span> childHeight = child.getMeasuredHeight();</div><div class="line">			<span class="keyword">int</span> childBaseline = -<span class="number">1</span>;</div><div class="line"></div><div class="line">			<span class="keyword">final</span> LinearLayout.LayoutParams lp =</div><div class="line">					(LinearLayout.LayoutParams) child.getLayoutParams();</div><div class="line"></div><div class="line">			<span class="keyword">if</span> (baselineAligned &amp;&amp; lp.height != LayoutParams.MATCH_PARENT) &#123;</div><div class="line">				childBaseline = child.getBaseline();</div><div class="line">			&#125;</div><div class="line"></div><div class="line">			<span class="keyword">int</span> gravity = lp.gravity;</div><div class="line">			<span class="keyword">if</span> (gravity &lt; <span class="number">0</span>) &#123;</div><div class="line">				gravity = minorGravity;</div><div class="line">			&#125;</div><div class="line"></div><div class="line">			<span class="keyword">switch</span> (gravity &amp; Gravity.VERTICAL_GRAVITY_MASK) &#123;</div><div class="line">				<span class="keyword">case</span> Gravity.TOP:</div><div class="line">					childTop = paddingTop + lp.topMargin;</div><div class="line">					<span class="keyword">if</span> (childBaseline != -<span class="number">1</span>) &#123;</div><div class="line">						childTop += maxAscent[INDEX_TOP] - childBaseline;</div><div class="line">					&#125;</div><div class="line">					<span class="keyword">break</span>;</div><div class="line"></div><div class="line">				<span class="keyword">case</span> Gravity.CENTER_VERTICAL:</div><div class="line">					<span class="comment">// Removed support for baseline alignment when layout_gravity or</span></div><div class="line">					<span class="comment">// gravity == center_vertical. See bug #1038483.</span></div><div class="line">					<span class="comment">// Keep the code around if we need to re-enable this feature</span></div><div class="line">					<span class="comment">// if (childBaseline != -1) &#123;</span></div><div class="line">					<span class="comment">//     // Align baselines vertically only if the child is smaller than us</span></div><div class="line">					<span class="comment">//     if (childSpace - childHeight &gt; 0) &#123;</span></div><div class="line">					<span class="comment">//         childTop = paddingTop + (childSpace / 2) - childBaseline;</span></div><div class="line">					<span class="comment">//     &#125; else &#123;</span></div><div class="line">					<span class="comment">//         childTop = paddingTop + (childSpace - childHeight) / 2;</span></div><div class="line">					<span class="comment">//     &#125;</span></div><div class="line">					<span class="comment">// &#125; else &#123;</span></div><div class="line">					childTop = paddingTop + ((childSpace - childHeight) / <span class="number">2</span>)</div><div class="line">							+ lp.topMargin - lp.bottomMargin;</div><div class="line">					<span class="keyword">break</span>;</div><div class="line"></div><div class="line">				<span class="keyword">case</span> Gravity.BOTTOM:</div><div class="line">					childTop = childBottom - childHeight - lp.bottomMargin;</div><div class="line">					<span class="keyword">if</span> (childBaseline != -<span class="number">1</span>) &#123;</div><div class="line">						<span class="keyword">int</span> descent = child.getMeasuredHeight() - childBaseline;</div><div class="line">						childTop -= (maxDescent[INDEX_BOTTOM] - descent);</div><div class="line">					&#125;</div><div class="line">					<span class="keyword">break</span>;</div><div class="line">				<span class="keyword">default</span>:</div><div class="line">					childTop = paddingTop;</div><div class="line">					<span class="keyword">break</span>;</div><div class="line">			&#125;</div><div class="line"></div><div class="line">			<span class="keyword">if</span> (hasDividerBeforeChildAt(childIndex)) &#123;</div><div class="line">				childLeft += mDividerWidth;</div><div class="line">			&#125;</div><div class="line"></div><div class="line">			childLeft += lp.leftMargin;</div><div class="line">			<span class="comment">// 确定子View布局</span></div><div class="line">			setChildFrame(child, childLeft + getLocationOffset(child), childTop,</div><div class="line">					childWidth, childHeight);</div><div class="line">			<span class="comment">// 不断增大的childLeft</span></div><div class="line">			childLeft += childWidth + lp.rightMargin +</div><div class="line">					getNextLocationOffset(child);</div><div class="line"></div><div class="line">			i += getChildrenSkipCount(child, childIndex);</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>在上述代码中，会遍历所有的子View，并根据它的居中属性，对childTop进行调整。调用setChildFrame方法来确定子View的布局，如果你跟踪一下，你会发现，它其实调用了child.layout方法，同时每次调用之后，不断增大当前的childLeft，以使下一次的布局不断平移。<br></p>
+<p>按照measure的流程，接下来应该是View的layout流程，View#layout方法，之后又跳转到View的onLayout方法，这个方法只是一个空的实现，一般情况下我们也不需要重载该方法。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onLayout</span><span class="params">(<span class="keyword">boolean</span> changed, <span class="keyword">int</span> left, <span class="keyword">int</span> top, <span class="keyword">int</span> right, <span class="keyword">int</span> bottom)</span> </span>&#123;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>现在我们已经完成了layout方法的分析。<br><br><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/old/requestLayout.png" alt="requestLayout" title="requestLayout" width="800"><br></p>
+<h2 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h2><p>本文分析了View的requestLayout流程，并以DecorView和LinearLayout为例，对View的测量流程、布局流程进行了分析。如果在阅读过程中，有任何疑问与问题，欢迎与我联系。<br></p>
+<p><strong>博客:www.idtkm.com</strong><br><br><strong>GitHub:<a href="https://github.com/Idtk" target="_blank" rel="external">https://github.com/Idtk</a></strong><br><br><strong>微博:<a href="http://weibo.com/Idtk" target="_blank" rel="external">http://weibo.com/Idtk</a></strong><br><br><strong>邮箱:IdtkMa@gmail.com</strong><br><br><br></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CustomView/" rel="tag"># CustomView</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/08/02/9、Invalidate/" rel="next" title="View的invalidate传递与绘制流程分析">
+                <i class="fa fa-chevron-left"></i> View的invalidate传递与绘制流程分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/08/15/11、TouchEvent/" rel="prev" title="更简单的学习Android事件分发">
+                更简单的学习Android事件分发 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/header.jpg"
+               alt="Idtk" />
+          <p class="site-author-name" itemprop="name">Idtk</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Idtk" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/Idtk" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="mailto:IdtkMa@gmail.com" target="_blank" title="Email">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                  Email
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、requestLayout的请求传递"><span class="nav-number">1.</span> <span class="nav-text">一、requestLayout的请求传递</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、测量流程"><span class="nav-number">2.</span> <span class="nav-text">二、测量流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、布局流程"><span class="nav-number">3.</span> <span class="nav-text">三、布局流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、总结"><span class="nav-number">4.</span> <span class="nav-text">四、总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Idtk</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "a727d901f6db4dd0a57496c675fe7c96",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+
+  
+
+</body>
+</html>

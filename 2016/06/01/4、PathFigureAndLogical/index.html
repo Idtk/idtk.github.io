@@ -1,0 +1,1016 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="CustomView," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Idtk" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="自定义View系列目录
+涉及知识Path
+
+
+
+类型
+API
+描述
+
+
+
+
+添加路径
+addArc, addCircle, addOval, addPath, addRect, addRoundRect, arcTo
+依次为添加圆弧、圆、椭圆、路径、矩形、圆角矩形、圆弧
+
+
+移动起点
+moveTo
+移动起点位置，仅对之后路径产生影响
+
+
+移动终点
+setLastPoint
+移动上一次的终点位置，对">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Path图形与逻辑运算">
+<meta property="og:url" content="http://yoursite.com/2016/06/01/4、PathFigureAndLogical/index.html">
+<meta property="og:site_name" content="Idtk">
+<meta property="og:description" content="自定义View系列目录
+涉及知识Path
+
+
+
+类型
+API
+描述
+
+
+
+
+添加路径
+addArc, addCircle, addOval, addPath, addRect, addRoundRect, arcTo
+依次为添加圆弧、圆、椭圆、路径、矩形、圆角矩形、圆弧
+
+
+移动起点
+moveTo
+移动起点位置，仅对之后路径产生影响
+
+
+移动终点
+setLastPoint
+移动上一次的终点位置，对">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9D%90%E6%A0%87%E7%B3%BB2.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/addarc.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/arcto.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9C%86%E5%BD%A2.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9C%86%E8%A7%92.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9C%86%E8%A7%922.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E8%A1%A5%E9%9B%861.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E8%A1%A5%E9%9B%862.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E4%BA%A4%E9%9B%86.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E5%90%88%E9%9B%86.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E5%BC%82%E6%88%96.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9C%86%E8%A7%923.png">
+<meta property="og:updated_time" content="2017-03-12T13:01:35.963Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Path图形与逻辑运算">
+<meta name="twitter:description" content="自定义View系列目录
+涉及知识Path
+
+
+
+类型
+API
+描述
+
+
+
+
+添加路径
+addArc, addCircle, addOval, addPath, addRect, addRoundRect, arcTo
+依次为添加圆弧、圆、椭圆、路径、矩形、圆角矩形、圆弧
+
+
+移动起点
+moveTo
+移动起点位置，仅对之后路径产生影响
+
+
+移动终点
+setLastPoint
+移动上一次的终点位置，对">
+<meta name="twitter:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9D%90%E6%A0%87%E7%B3%BB2.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/06/01/4、PathFigureAndLogical/"/>
+
+
+
+
+
+  <title> Path图形与逻辑运算 | Idtk </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  <div style="display: none;">
+    <script src="//s11.cnzz.com/z_stat.php?id=1261484069&web_id=1261484069" language="JavaScript"></script>
+  </div>
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Idtk</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/06/01/4、PathFigureAndLogical/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Idtk">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Idtk">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Path图形与逻辑运算
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-06-01T00:00:00+08:00">
+                2016-06-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2016/06/01/4、PathFigureAndLogical/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
+<h2 id="涉及知识"><a href="#涉及知识" class="headerlink" title="涉及知识"></a>涉及知识<br></h2><p><strong>Path</strong><br></p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th style="text-align:center">API</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>添加路径</td>
+<td style="text-align:center">addArc, addCircle, addOval, addPath, addRect, addRoundRect, arcTo</td>
+<td>依次为添加圆弧、圆、椭圆、路径、矩形、圆角矩形、圆弧</td>
+</tr>
+<tr>
+<td>移动起点</td>
+<td style="text-align:center">moveTo</td>
+<td>移动起点位置，仅对之后路径产生影响</td>
+</tr>
+<tr>
+<td>移动终点</td>
+<td style="text-align:center">setLastPoint</td>
+<td>移动上一次的终点位置，对前后的路径都会产生影响</td>
+</tr>
+<tr>
+<td>直线</td>
+<td style="text-align:center">lineTo</td>
+<td>增加一条道指定点的直线</td>
+</tr>
+<tr>
+<td>贝塞尔</td>
+<td style="text-align:center">quadTo, cubicTo</td>
+<td>二阶、三阶贝塞尔曲线</td>
+</tr>
+<tr>
+<td>闭合路径</td>
+<td style="text-align:center">close</td>
+<td>路径终点连接到起点</td>
+</tr>
+<tr>
+<td>逻辑运算</td>
+<td style="text-align:center">op</td>
+<td>A\B(DIFFERENCE), A∩B(INTERSECT), B\A(REVERSE_DIFFERENCE), A∪B(UNION), A⊕B(XOR)</td>
+</tr>
+<tr>
+<td>替换路径</td>
+<td style="text-align:center">set</td>
+<td>用新的路径替换当前路径</td>
+</tr>
+<tr>
+<td>重置</td>
+<td style="text-align:center">reset, rewind</td>
+<td>清除path使它为空，清除path但保留内部的数据结构</td>
+</tr>
+<tr>
+<td>计算边界</td>
+<td style="text-align:center">computeBounds</td>
+<td>计算路径的矩形边界</td>
+</tr>
+<tr>
+<td>闭合方向</td>
+<td style="text-align:center">Direction</td>
+<td>顺时针方向闭合Path(CW),逆时针方向闭合Path(CCW)</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p><strong>本来这章应该是PieChart的实战，可是我在编写的时候发现了一个设置背景图片的bug。作为一个强迫症(ಥ _ ಥ)，我只好引入了Path来解决这个bug，所以就有了这一篇内容。</strong></p>
+<a id="more"></a>
+<h2 id="一、什么是Path"><a href="#一、什么是Path" class="headerlink" title="一、什么是Path"></a>一、什么是Path</h2><p>官方描述:<br><br>&nbsp;&nbsp;&nbsp;&nbsp;Path class 封装了由直线、二次、三次贝塞尔曲线构成的多重曲线几何路径。它可以用canvas.drawPath(path,paint)方法绘图，填充和线都可以（根据paint的样式），或者它可以用于在绘图路径上裁剪或者绘出文本。<br><br></p>
+<p>我的理解:<br><br>&nbsp;&nbsp;&nbsp;&nbsp;Path由任意多条直线、二次贝塞尔或三次贝塞尔曲线组成,可以选择填充或者描边模式，可以使用它裁剪画布或者绘制文字。</p>
+<h2 id="二、添加路径"><a href="#二、添加路径" class="headerlink" title="二、添加路径"></a>二、添加路径</h2><h3 id="1、lineTo-moveTo"><a href="#1、lineTo-moveTo" class="headerlink" title="1、lineTo,moveTo"></a>1、lineTo,moveTo</h3><p>在之前的文章中，使用canvas的函数绘制过<a href="http://www.idtkm.com/customview/customview2/" target="_blank" rel="external">坐标系</a>，这次使用path来绘制。<br></p>
+<h4 id="a、创建画笔"><a href="#a、创建画笔" class="headerlink" title="a、创建画笔"></a>a、创建画笔</h4><p>创建画笔并初始化<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//创建画笔</span></div><div class="line"><span class="keyword">private</span> Paint mPaint = <span class="keyword">new</span> Paint();</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initPaint</span><span class="params">()</span></span>&#123;</div><div class="line">    <span class="comment">//初始化画笔</span></div><div class="line">    mPaint.setStyle(Paint.Style.FILL);<span class="comment">//设置画笔类型</span></div><div class="line">    mPaint.setAntiAlias(<span class="keyword">true</span>);<span class="comment">//抗锯齿</span></div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<h4 id="b、绘制坐标轴"><a href="#b、绘制坐标轴" class="headerlink" title="b、绘制坐标轴"></a>b、绘制坐标轴</h4><p>使用onSizeChanged方法，获取根据父布局等因素确认的View宽高<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//宽高</span></div><div class="line"><span class="keyword">private</span> <span class="keyword">int</span> mWidth;</div><div class="line"><span class="keyword">private</span> <span class="keyword">int</span> mHeight;</div><div class="line"></div><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onSizeChanged</span><span class="params">(<span class="keyword">int</span> w, <span class="keyword">int</span> h, <span class="keyword">int</span> oldw, <span class="keyword">int</span> oldh)</span> </span>&#123;</div><div class="line">    <span class="keyword">super</span>.onSizeChanged(w, h, oldw, oldh);</div><div class="line">    mWidth = w;</div><div class="line">    mHeight = h;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>把原点从左上角移动到画布中心,绘制原点与四个端点<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> Path mPath = <span class="keyword">new</span> Path();</div><div class="line"></div><div class="line">canvas.translate(mWidth/<span class="number">2</span>,mHeight/<span class="number">2</span>);<span class="comment">// 将画布坐标原点移动到中心位置</span></div><div class="line"><span class="comment">//绘制坐标原点</span></div><div class="line">mPaint.setColor(Color.BLACK);<span class="comment">//设置画笔颜色</span></div><div class="line">mPaint.setStrokeWidth(<span class="number">10</span>);<span class="comment">//为了看得清楚,设置了较大的画笔宽度</span></div><div class="line">canvas.drawPoint(<span class="number">0</span>,<span class="number">0</span>,mPaint);</div><div class="line"><span class="comment">//绘制坐标轴4个断点</span></div><div class="line">canvas.drawPoints(<span class="keyword">new</span> <span class="keyword">float</span>[]&#123;</div><div class="line">        mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span></div><div class="line">        ,<span class="number">0</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span></div><div class="line">        ,-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span></div><div class="line">        ,<span class="number">0</span>,-mHeight/<span class="number">2</span>*<span class="number">0.8f</span>&#125;,mPaint);</div></pre></td></tr></table></figure></p>
+<p>增加坐标轴与箭头的Path，在完成后使用<strong>canvas.drawPath</strong>一次进行绘制<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">mPaint.setStrokeWidth(<span class="number">1</span>);<span class="comment">//恢复画笔默认宽度</span></div><div class="line"><span class="comment">//x轴</span></div><div class="line">mPath.moveTo(-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span>);<span class="comment">//移动path起点到(-mWidth/2*0.8f,0)</span></div><div class="line">mPath.lineTo(mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span>);<span class="comment">//直线终点为(mWidth/2*0.8f,0)</span></div><div class="line"><span class="comment">//y轴</span></div><div class="line">mPath.moveTo(<span class="number">0</span>,-mHeight/<span class="number">2</span>*<span class="number">0.8f</span>);<span class="comment">//移动path起点到(0,-mHeight/2*0.8f)</span></div><div class="line">mPath.lineTo(<span class="number">0</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>);<span class="comment">//直线终点为(0,mHeight/2*0.8f)</span></div><div class="line"><span class="comment">//x箭头</span></div><div class="line">mPath.moveTo(mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.95f</span>,-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>);</div><div class="line">mPath.lineTo(mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span>);</div><div class="line">mPath.lineTo(mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.95f</span>,mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>);</div><div class="line"><span class="comment">//y箭头</span></div><div class="line">mPath.moveTo(mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>);</div><div class="line">mPath.lineTo(<span class="number">0</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>);</div><div class="line">mPath.lineTo(-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>);</div><div class="line"><span class="comment">//绘制Path</span></div><div class="line">canvas.drawPath(mPath,mPaint);</div></pre></td></tr></table></figure></p>
+<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9D%90%E6%A0%87%E7%B3%BB2.png" alt="坐标系" title="坐标系" width="300"><br><br><br>可以看出moveTo方法，可以移动下一次增加path的起点，而lineTo中的参数，即为直线的终点。</p>
+<h3 id="2、addArc与arcTo"><a href="#2、addArc与arcTo" class="headerlink" title="2、addArc与arcTo"></a>2、addArc与arcTo</h3><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>区别</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>addArc</td>
+<td>画一段圆弧</td>
+</tr>
+<tr>
+<td>arcTo</td>
+<td>画一段圆弧，当上一次的终点与圆弧起点未连接时，可以设置是否连接这两点</td>
+</tr>
+</tbody>
+</table>
+<p>addArc<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">r = Math.min(mWidth,mHeight)*<span class="number">0.6f</span>/<span class="number">2</span>;</div><div class="line">mRectF.left = <span class="number">0</span>;</div><div class="line">mRectF.top = -r;</div><div class="line">mRectF.right = r;</div><div class="line">mRectF.bottom = <span class="number">0</span>;</div><div class="line">mPath.addArc(mRectF,-<span class="number">60</span>,<span class="number">180</span>);</div><div class="line"><span class="comment">//绘制Path</span></div><div class="line">canvas.drawPath(mPath,mPaint);</div></pre></td></tr></table></figure></p>
+<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/addarc.png" alt="addArc" title="addArc" width="300"><br><br><br>再来看看arcTo<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//arcTo</span></div><div class="line">mPath.moveTo(<span class="number">0</span>,<span class="number">0</span>);</div><div class="line">mPath.arcTo(mRectF,-<span class="number">60</span>,<span class="number">180</span>);</div><div class="line"><span class="comment">//绘制Path</span></div><div class="line">canvas.drawPath(mPath,mPaint);</div></pre></td></tr></table></figure></p>
+<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/arcto.png" alt="arcTo" title="arcTo" width="300"><br><br><br>可以看到arcTo多了<strong>一条从原点到圆弧起点的直线</strong>，而如果设置为mPath.arcTo(mRectF,-60,180,false);效果将和addArc相同。<br><br></p>
+<h2 id="三、圆角图片以及更多形状图片"><a href="#三、圆角图片以及更多形状图片" class="headerlink" title="三、圆角图片以及更多形状图片"></a>三、圆角图片以及更多形状图片</h2><p>继承<strong>ImageView</strong>,重写父类的<strong>onSizeChanged</strong>方法，获取View尺寸，之后根据View大小对图片进行压缩。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onSizeChanged</span><span class="params">(<span class="keyword">int</span> w, <span class="keyword">int</span> h, <span class="keyword">int</span> oldw, <span class="keyword">int</span> oldh)</span> </span>&#123;</div><div class="line">    <span class="keyword">super</span>.onSizeChanged(w, h, oldw, oldh);</div><div class="line">    mViewWidth = w;</div><div class="line">    mViewHeight = h;</div><div class="line">    size();<span class="comment">//切割尺寸计算</span></div><div class="line">    scaleBitmap();<span class="comment">//压缩图片尺寸函数</span></div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>在<strong>onDraw</strong>方法中进行样式绘制，在其中使用<strong>clipPath</strong>的方法来实现圆角图片。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onDraw</span><span class="params">(Canvas canvas)</span> </span>&#123;</div><div class="line">    canvas.translate(mViewWidth/<span class="number">2</span>,mViewHeight/<span class="number">2</span>);<span class="comment">//将画布坐标原点移动到中心位置</span></div><div class="line">    canvas.clipPath(pathFigure(), Region.Op.INTERSECT);<span class="comment">//切割</span></div><div class="line">    mPath.reset();</div><div class="line">    canvas.drawBitmap(b,rect,rect,mPaint);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>在<strong>scaleBitmap</strong>方法中对图片的尺寸进行压缩<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">scaleBitmap</span><span class="params">()</span></span>&#123;</div><div class="line">    Drawable drawable = getDrawable();<span class="comment">//获取图片</span></div><div class="line">    <span class="keyword">if</span> (drawable == <span class="keyword">null</span>) &#123;</div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (getWidth() == <span class="number">0</span> || getHeight() == <span class="number">0</span>) &#123;</div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (!(drawable <span class="keyword">instanceof</span> BitmapDrawable)) &#123;</div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">    b = ((BitmapDrawable) drawable).getBitmap();<span class="comment">//获取bitmap</span></div><div class="line">    <span class="keyword">if</span> (<span class="keyword">null</span> == b) &#123;</div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">float</span> scaleWidth = (<span class="keyword">float</span>) length/b.getWidth();</div><div class="line">    <span class="keyword">float</span> scaleHeight = (<span class="keyword">float</span>) length/b.getHeight();</div><div class="line">    matrix.postScale(scaleWidth,scaleHeight);<span class="comment">//缩放矩阵</span></div><div class="line">    b=Bitmap.createBitmap(b,<span class="number">0</span>,<span class="number">0</span>,b.getWidth(),b.getHeight(),matrix,<span class="keyword">true</span>);<span class="comment">//压缩图片</span></div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>在<strong>size</strong>方法中设置canvas的切割尺寸<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">size</span><span class="params">()</span></span>&#123;</div><div class="line">    length = Math.min(mViewWidth,mViewHeight)/<span class="number">2</span>;</div><div class="line">    rect = <span class="keyword">new</span> Rect(-(<span class="keyword">int</span>) length, -(<span class="keyword">int</span>) length, (<span class="keyword">int</span>) length, (<span class="keyword">int</span>) length);<span class="comment">//绘制图片矩阵</span></div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p><strong>现在就是发挥想象力的时候啦♪(^∇^*)，来编写pathFigure()方法吧</strong><br></p>
+<h4 id="a、先编写一个简单的圆形图片样式"><a href="#a、先编写一个简单的圆形图片样式" class="headerlink" title="a、先编写一个简单的圆形图片样式"></a>a、先编写一个简单的圆形图片样式</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> Path <span class="title">pathFigure</span><span class="params">()</span></span>&#123;</div><div class="line">    <span class="keyword">switch</span> (modeFlag)&#123;</div><div class="line">        <span class="keyword">case</span> CIRCLE:</div><div class="line">            mPath.addCircle(<span class="number">0</span>,<span class="number">0</span>,length, Path.Direction.CW);<span class="comment">//增加圆的path，顺时针闭合圆</span></div><div class="line">            <span class="keyword">break</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> mPath;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9C%86%E5%BD%A2.png" alt="圆形" title="圆形" width="300"></p>
+<h4 id="b、增加一个圆角图片样式"><a href="#b、增加一个圆角图片样式" class="headerlink" title="b、增加一个圆角图片样式"></a>b、增加一个圆角图片样式</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="keyword">private</span> RectF rectF = <span class="keyword">new</span> RectF();</div><div class="line"></div><div class="line"><span class="keyword">case</span> ROUNDRECT:</div><div class="line">            rectF.left = -length;</div><div class="line">            rectF.top = -length;</div><div class="line">            rectF.right = length;</div><div class="line">            rectF.bottom = length;</div><div class="line">            <span class="comment">//圆角矩形，radius为圆角的半径，顺时针闭合圆角矩形</span></div><div class="line">            mPath.addRoundRect(rectF,radius,radius, Path.Direction.CW);</div><div class="line">            <span class="keyword">break</span>;</div></pre></td></tr></table></figure>
+<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9C%86%E8%A7%92.png" alt="圆角" title="圆角" width="300"></p>
+<h4 id="c、再增加一个扇形样式"><a href="#c、再增加一个扇形样式" class="headerlink" title="c、再增加一个扇形样式"></a>c、再增加一个扇形样式<br></h4><p>(<strong>PS:为了可以获得更多的图片面积，需要把圆心下移一个length的距离，半径扩大到之前的两倍</strong>)<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">case</span> SECTOR:</div><div class="line">    rectF.left = -length*<span class="number">2</span>;</div><div class="line">    rectF.top = -length;</div><div class="line">    rectF.right = length*<span class="number">2</span>;</div><div class="line">    rectF.bottom = length*<span class="number">3</span>;</div><div class="line">    mPath.moveTo(<span class="number">0</span>,length);</div><div class="line">    mPath.arcTo(rectF,angle,-angle*<span class="number">2</span>-<span class="number">180</span>);<span class="comment">//绘制圆弧</span></div><div class="line">    <span class="keyword">break</span>;</div></pre></td></tr></table></figure></p>
+<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9C%86%E8%A7%922.png" alt="扇形" title="扇形" width="300"></p>
+<h2 id="四、逻辑运算"><a href="#四、逻辑运算" class="headerlink" title="四、逻辑运算"></a>四、逻辑运算</h2><p>两条Path可通过多种逻辑运算进行结合，形成新的Path。<br><br><br><br>API如下:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">op(Path path, Path.Op op)</div><div class="line">op(Path path1, Path path2, Path.Op op)</div></pre></td></tr></table></figure></p>
+<p>逻辑运算具有五种类型:</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+<th>示意图</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DIFFERENCE</td>
+<td>B在A中的相对补集，即A减去A与B的交集</td>
+<td><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E8%A1%A5%E9%9B%861.png" alt="DIFFERENCE" width="100"></td>
+</tr>
+<tr>
+<td>REVERSE_DIFFERENCE</td>
+<td>A在B中的相对补集合，即B减去B与A的交集</td>
+<td><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E8%A1%A5%E9%9B%862.png" alt="REVERSE_DIFFERENCE" width="100"></td>
+</tr>
+<tr>
+<td>INTERSECT</td>
+<td>A与B的交集</td>
+<td><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E4%BA%A4%E9%9B%86.png" alt="INTERSECT" width="100"></td>
+</tr>
+<tr>
+<td>UNION</td>
+<td>A与B的合集</td>
+<td><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E5%90%88%E9%9B%86.png" alt="UNION" width="100"></td>
+</tr>
+<tr>
+<td>XOR</td>
+<td>A与B的合集减去A与B的交集</td>
+<td><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E5%BC%82%E6%88%96.png" alt="XOR" width="100"></td>
+</tr>
+</tbody>
+</table>
+<p>使用Path.op方法再给圆角图片类，增加一种环形样式:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">case</span> RING:</div><div class="line">    rectF.left = -length*<span class="number">2</span>;</div><div class="line">    rectF.top = -length;</div><div class="line">    rectF.right = length*<span class="number">2</span>;</div><div class="line">    rectF.bottom = length*<span class="number">3</span>;</div><div class="line">    mPath1.moveTo(<span class="number">0</span>,length);</div><div class="line">    mPath1.arcTo(rectF,angle,-angle*<span class="number">2</span>-<span class="number">180</span>);<span class="comment">//较大的圆弧</span></div><div class="line"></div><div class="line">    rectF.left = -length/<span class="number">2</span>;</div><div class="line">    rectF.top = length/<span class="number">2</span>;</div><div class="line">    rectF.right = length/<span class="number">2</span>;</div><div class="line">    rectF.bottom = length*<span class="number">3</span>/<span class="number">2</span>;</div><div class="line">    mPath2.moveTo(<span class="number">0</span>,length);</div><div class="line">    mPath2.arcTo(rectF,angle,-angle*<span class="number">2</span>-<span class="number">180</span>);<span class="comment">//较小的圆弧</span></div><div class="line"></div><div class="line">    mPath.op(mPath1,mPath2, Path.Op.XOR);<span class="comment">//异或获取环形</span></div></pre></td></tr></table></figure></p>
+<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9C%86%E8%A7%923.png" alt="圆环" title="圆环" width="300"></p>
+<h2 id="五、小结"><a href="#五、小结" class="headerlink" title="五、小结"></a>五、小结</h2><p>本文介绍了Path的基本使用方法与逻辑运算，同时通过圆角图片的例子，进行了实战。使用Path方法，还可以增加更多有趣的图形，比如star，多边形，格子图等等。如果在阅读过程中，有任何疑问与问题，欢迎与我联系。<br><br><strong>博客:www.idtkm.com</strong><br><br><strong>GitHub:<a href="https://github.com/Idtk" target="_blank" rel="external">https://github.com/Idtk</a></strong><br><br><strong>微博:<a href="http://weibo.com/Idtk" target="_blank" rel="external">http://weibo.com/Idtk</a></strong><br><br><strong>邮箱:IdtkMa@gmail.com</strong><br><br><br><br><strong>PS: 示例中使用的方法，相对消耗内存，更合适的是设置反向填充来完成圆角图片的生成，FigureImageView为反向填充的方法，OldFigureImageView为示例中的方法 <a href="https://github.com/Idtk/FigureImageView" target="_blank" rel="external">源码</a></strong></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CustomView/" rel="tag"># CustomView</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/05/21/3、Multi-lineTextCenter/" rel="next" title="View多行文本居中">
+                <i class="fa fa-chevron-left"></i> View多行文本居中
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/06/13/5、PieChart/" rel="prev" title="PieChart扇形图的实现">
+                PieChart扇形图的实现 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/header.jpg"
+               alt="Idtk" />
+          <p class="site-author-name" itemprop="name">Idtk</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Idtk" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/Idtk" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="mailto:IdtkMa@gmail.com" target="_blank" title="Email">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                  Email
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#涉及知识"><span class="nav-number">1.</span> <span class="nav-text">涉及知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一、什么是Path"><span class="nav-number">2.</span> <span class="nav-text">一、什么是Path</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、添加路径"><span class="nav-number">3.</span> <span class="nav-text">二、添加路径</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、lineTo-moveTo"><span class="nav-number">3.1.</span> <span class="nav-text">1、lineTo,moveTo</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#a、创建画笔"><span class="nav-number">3.1.1.</span> <span class="nav-text">a、创建画笔</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#b、绘制坐标轴"><span class="nav-number">3.1.2.</span> <span class="nav-text">b、绘制坐标轴</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、addArc与arcTo"><span class="nav-number">3.2.</span> <span class="nav-text">2、addArc与arcTo</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、圆角图片以及更多形状图片"><span class="nav-number">4.</span> <span class="nav-text">三、圆角图片以及更多形状图片</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#a、先编写一个简单的圆形图片样式"><span class="nav-number">4.0.1.</span> <span class="nav-text">a、先编写一个简单的圆形图片样式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#b、增加一个圆角图片样式"><span class="nav-number">4.0.2.</span> <span class="nav-text">b、增加一个圆角图片样式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#c、再增加一个扇形样式"><span class="nav-number">4.0.3.</span> <span class="nav-text">c、再增加一个扇形样式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、逻辑运算"><span class="nav-number">5.</span> <span class="nav-text">四、逻辑运算</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五、小结"><span class="nav-number">6.</span> <span class="nav-text">五、小结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Idtk</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "a727d901f6db4dd0a57496c675fe7c96",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+
+  
+
+</body>
+</html>

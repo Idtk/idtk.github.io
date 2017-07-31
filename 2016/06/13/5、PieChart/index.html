@@ -1,0 +1,833 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="CustomView," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Idtk" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="(PS: 经过之前4篇博客的基础知识学习，终于可以开始编写PieChart了 ~(≧▽≦)/~啦啦啦)">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PieChart扇形图的实现">
+<meta property="og:url" content="http://yoursite.com/2016/06/13/5、PieChart/index.html">
+<meta property="og:site_name" content="Idtk">
+<meta property="og:description" content="(PS: 经过之前4篇博客的基础知识学习，终于可以开始编写PieChart了 ~(≧▽≦)/~啦啦啦)">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/all/PieChart.gif">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/onSizeChange.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E7%BB%98%E5%88%B6%E6%89%87%E5%BD%A2.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E7%BB%98%E5%88%B6%E6%96%87%E6%9C%AC.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/onTouchEvent.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/cubic.gif">
+<meta property="og:updated_time" content="2017-03-12T13:04:58.811Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="PieChart扇形图的实现">
+<meta name="twitter:description" content="(PS: 经过之前4篇博客的基础知识学习，终于可以开始编写PieChart了 ~(≧▽≦)/~啦啦啦)">
+<meta name="twitter:image" content="http://ompb0h8qq.bkt.clouddn.com/all/PieChart.gif">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/06/13/5、PieChart/"/>
+
+
+
+
+
+  <title> PieChart扇形图的实现 | Idtk </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  <div style="display: none;">
+    <script src="//s11.cnzz.com/z_stat.php?id=1261484069&web_id=1261484069" language="JavaScript"></script>
+  </div>
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Idtk</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/06/13/5、PieChart/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Idtk">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Idtk">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                PieChart扇形图的实现
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-06-13T00:00:00+08:00">
+                2016-06-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2016/06/13/5、PieChart/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="http://ompb0h8qq.bkt.clouddn.com/all/PieChart.gif" alt="PieChat" title="PieChat" width="300"><br></p>
+<p>(<strong>PS: 经过之前<a href="http://www.idtkm.com/category/customview/" target="_blank" rel="external">4篇博客</a>的基础知识学习，终于可以开始编写PieChart了 ~(≧▽≦)/~啦啦啦</strong>)</p>
+<a id="more"></a>
+<p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
+<h2 id="一、数据需求"><a href="#一、数据需求" class="headerlink" title="一、数据需求"></a>一、数据需求</h2><p>来分析下，用户需要提供怎样的数据，首先要有数据的值，然后还需要对应的数据名称，以及颜色。绘制PieChart需要什么呢，由图可以看出，需要百分比值，扇形角度，色块颜色。所以总共属性有:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PieData</span> </span>&#123;</div><div class="line">    <span class="keyword">private</span> String name;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">float</span> value;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">float</span> percentage;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">int</span> color = <span class="number">0</span>;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">float</span> angle = <span class="number">0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>各属性的set与get请自行增加。</p>
+<h2 id="二、构造函数"><a href="#二、构造函数" class="headerlink" title="二、构造函数"></a>二、构造函数</h2><p>构造函数中，增加一些xml设置，创建一个attrs.xml<br><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">&lt;?xml version="1.0" encoding="utf-8"?&gt;</div><div class="line">&lt;resources&gt;</div><div class="line">    &lt;declare-styleable name="PieChart"&gt;</div><div class="line">        &lt;attr name="name" format="string"/&gt;</div><div class="line">        &lt;attr name="percentDecimal" format="integer"/&gt;</div><div class="line">        &lt;attr name="textSize" format="dimension"/&gt;</div><div class="line">    &lt;/declare-styleable&gt;</div><div class="line">&lt;/resources&gt;</div></pre></td></tr></table></figure></p>
+<p>这是只设置了一部分属性，如果你有强迫症希望全部设置的话，可以自行增加。在PieChart中使用TypedArray进行属性的获取。建议使用如下的写法，<strong>可以避免在没有设置属性时，也运行getXXX方法</strong>。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.PieChart, defStyleAttr,defStyleRes);</div><div class="line"><span class="keyword">int</span> n = array.getIndexCount();</div><div class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;n; i++)&#123;</div><div class="line">    <span class="keyword">int</span> attr = array.getIndex(i);</div><div class="line">    <span class="keyword">switch</span> (attr)&#123;</div><div class="line">        <span class="keyword">case</span> R.styleable.PieChart_name:</div><div class="line">            name = array.getString(attr);</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">case</span> R.styleable.PieChart_percentDecimal:</div><div class="line">            percentDecimal = array.getInt(attr,percentDecimal);</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">case</span> R.styleable.PieChart_textSize:</div><div class="line">            percentTextSize = array.getDimensionPixelSize(attr,percentTextSize);</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line">array.recycle();</div></pre></td></tr></table></figure></p>
+<h2 id="三、动画函数"><a href="#三、动画函数" class="headerlink" title="三、动画函数"></a>三、动画函数</h2><p>绘制一个完整的圆，旋转的角度为360，动画时间为可set参数，默认5秒，监听animatedValue参数，用于与绘制时进行计算。ValueAnimator类涉及到的参数的意义请查看<a href="http://www.idtkm.com/customview/customview2/" target="_blank" rel="external">自定义View——Canvas与ValueAnimator</a>文章。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initAnimator</span><span class="params">(<span class="keyword">long</span> duration)</span></span>&#123;</div><div class="line">    <span class="keyword">if</span> (animator !=<span class="keyword">null</span> &amp;&amp;animator.isRunning())&#123;</div><div class="line">        animator.cancel();</div><div class="line">        animator.start();</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        animator=ValueAnimator.ofFloat(<span class="number">0</span>,<span class="number">360</span>).setDuration(duration);</div><div class="line">        animator.setInterpolator(timeInterpolator);</div><div class="line">        animator.addUpdateListener(<span class="keyword">new</span> ValueAnimator.AnimatorUpdateListener() &#123;</div><div class="line">            <span class="meta">@Override</span></div><div class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onAnimationUpdate</span><span class="params">(ValueAnimator animation)</span> </span>&#123;</div><div class="line">                animatedValue = (<span class="keyword">float</span>) animation.getAnimatedValue();</div><div class="line">                invalidate();</div><div class="line">            &#125;</div><div class="line">        &#125;);</div><div class="line">        animator.start();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<h2 id="四、onMeasure"><a href="#四、onMeasure" class="headerlink" title="四、onMeasure"></a>四、onMeasure</h2><p>View默认的onMeasure方法中，并没有根据测量模式，对布局宽高进行调整，所以为了适应<strong>wrap_content</strong>的布局设置，需要对onMeasure方法进行重写。<br></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onMeasure</span><span class="params">(<span class="keyword">int</span> widthMeasureSpec, <span class="keyword">int</span> heightMeasureSpec)</span> </span>&#123;</div><div class="line">    <span class="keyword">int</span> width = measureDimension(widthMeasureSpec);</div><div class="line">    <span class="keyword">int</span> height = measureDimension(heightMeasureSpec);</div><div class="line">    setMeasuredDimension(width,height);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><br><br>重写的onMeasure方法，调用了自定义的<strong>measureDimension</strong>方法处理数据，完成后交给系统的setMeasuredDimension方法。接下来看下自定义的<strong>measureDimension</strong>方法。<br><br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">measureDimension</span><span class="params">(<span class="keyword">int</span> measureSpec)</span></span>&#123;</div><div class="line">    <span class="keyword">int</span> size = measureWrap(mPaint);</div><div class="line">    <span class="keyword">int</span> specMode = MeasureSpec.getMode(measureSpec);</div><div class="line">    <span class="keyword">int</span> specSize = MeasureSpec.getSize(measureSpec);</div><div class="line">    <span class="keyword">switch</span> (specMode)&#123;</div><div class="line">        <span class="keyword">case</span> MeasureSpec.UNSPECIFIED:</div><div class="line">            size = measureWrap(mPaint);</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">case</span> MeasureSpec.EXACTLY:</div><div class="line">            size = specSize;</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">case</span> MeasureSpec.AT_MOST:</div><div class="line">			<span class="comment">//合适尺寸不得大于View的尺寸</span></div><div class="line">            size = Math.min(specSize,measureWrap(mPaint));</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> size;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p><br><br><strong>measureDimension</strong>根据测量的类型，分别计算尺寸的长度，每个类型的含义在<a href="http://www.idtkm.com/customview/customview1/" target="_blank" rel="external">第一篇</a>中已经进行了说明，在这里不再赘述。<strong>EXACTLY</strong>是在xml中定义<strong>match_parent以及具体的数值</strong>是使用，而<strong>AT_MOST</strong>则是在<strong>wrap_content</strong>时使用，<strong>measureWrap</strong>方法用于计算当前PieChart的最小合适长度，接下来看看这个方法。<br><br><br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">measureWrap</span><span class="params">(Paint paint)</span></span>&#123;</div><div class="line">    <span class="keyword">float</span> wrapSize;</div><div class="line">    <span class="keyword">if</span> (mPieData!=<span class="keyword">null</span>&amp;&amp;mPieData.size()&gt;<span class="number">1</span>)&#123;</div><div class="line">        NumberFormat numberFormat =NumberFormat.getPercentInstance();</div><div class="line">        numberFormat.setMinimumFractionDigits(percentDecimal);</div><div class="line">        paint.setTextSize(percentTextSize);</div><div class="line">        <span class="keyword">float</span> percentWidth = paint.measureText(numberFormat.format(mPieData.get(stringId).getPercentage())+<span class="string">""</span>);</div><div class="line">        paint.setTextSize(centerTextSize);</div><div class="line">        <span class="keyword">float</span> nameWidth = paint.measureText(name+<span class="string">""</span>);</div><div class="line">        wrapSize = (percentWidth*<span class="number">4</span>+nameWidth*<span class="number">1.0f</span>)*(<span class="keyword">float</span>) offsetScaleRadius;</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        wrapSize = <span class="number">0</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> (<span class="keyword">int</span>) wrapSize;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p><br><br>测量宽高的方式类似于TextView，根据PieChart中的<strong>图名与百分比文本的宽度</strong>进行计算的。其中stringId是在处理数据的过程中，计算出的拥有最长字符的区域Id。<br></p>
+<p>从代码中可以看出，<strong>wrap_content情况下的，PieChart的宽高就等于百分比字符长度的4倍，加上图名的长度。</strong><br><br></p>
+<h2 id="五、onSizeChanged"><a href="#五、onSizeChanged" class="headerlink" title="五、onSizeChanged"></a>五、onSizeChanged</h2><p>在此函数中，获取当前View的宽高以及根据<strong>padding</strong>值计算出的实际绘制区域的宽高，同时进行PieChart绘制所需的半径以及布局位置设置。<br><br><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/old/onSizeChange.png" alt="onSizeChanged" title="onSizeChanged" width="300"><br><br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onSizeChanged</span><span class="params">(<span class="keyword">int</span> w, <span class="keyword">int</span> h, <span class="keyword">int</span> oldw, <span class="keyword">int</span> oldh)</span> </span>&#123;</div><div class="line">    <span class="keyword">super</span>.onSizeChanged(w, h, oldw, oldh);</div><div class="line">    mWidth = w-getPaddingLeft()-getPaddingRight();<span class="comment">//适应padding设置</span></div><div class="line">    mHeight = h-getPaddingTop()-getPaddingBottom();<span class="comment">//适应padding设置</span></div><div class="line">    mViewWidth = w;</div><div class="line">    mViewHeight = h;</div><div class="line">    <span class="comment">//标准圆环</span></div><div class="line">    <span class="comment">//圆弧</span></div><div class="line">    r = (<span class="keyword">float</span>) (Math.min(mWidth,mHeight)/<span class="number">2</span>*widthScaleRadius);<span class="comment">// 饼状图半径</span></div><div class="line">    <span class="comment">// 饼状图绘制区域</span></div><div class="line">    rectF.left = -r;</div><div class="line">    rectF.top = -r;</div><div class="line">    rectF.right =r;</div><div class="line">    rectF.bottom = r;</div><div class="line">    <span class="comment">//白色圆弧</span></div><div class="line">    <span class="comment">//透明圆弧</span></div><div class="line">    rTra = (<span class="keyword">float</span>) (r*radiusScaleTransparent);</div><div class="line">    rectFTra.left = -rTra;</div><div class="line">    rectFTra.top = -rTra;</div><div class="line">    rectFTra.right = rTra;</div><div class="line">    rectFTra.bottom = rTra;</div><div class="line">    <span class="comment">//白色圆</span></div><div class="line">    rWhite = (<span class="keyword">float</span>) (r*radiusScaleInside);</div><div class="line"></div><div class="line">    <span class="comment">//浮出圆环</span></div><div class="line">    <span class="comment">//圆弧</span></div><div class="line">    <span class="comment">// 饼状图半径</span></div><div class="line">    rF = (<span class="keyword">float</span>) (Math.min(mWidth,mHeight)/<span class="number">2</span>*widthScaleRadius*offsetScaleRadius);</div><div class="line">    <span class="comment">// 饼状图绘制区域</span></div><div class="line">    rectFF.left = -rF;</div><div class="line">    rectFF.top = -rF;</div><div class="line">    rectFF.right = rF;</div><div class="line">    rectFF.bottom = rF;</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<h2 id="六、onDraw"><a href="#六、onDraw" class="headerlink" title="六、onDraw"></a>六、onDraw</h2><p>onDraw分为绘制扇形，绘制文本，绘制图名三个部分。绘制扇形和文本时需要与Valueanimator的监听值进行计算，完成动画；另外还要在Touch时进行交互，完成浮出动画。<br><br>在进行具体的绘制之前，需要坐标原点平移至中心位置，并且判断数据是否为空。</p>
+<h3 id="1、绘制扇形"><a href="#1、绘制扇形" class="headerlink" title="1、绘制扇形"></a>1、绘制扇形</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">float</span> currentStartAngle = <span class="number">0</span>;<span class="comment">// 当前起始角度</span></div><div class="line">canvas.save();</div><div class="line">canvas.rotate(mStartAngle);</div><div class="line"><span class="keyword">float</span> drawAngle;</div><div class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;mPieData.size(); i++)&#123;</div><div class="line">    PieData pie = mPieData.get(i);</div><div class="line">    <span class="keyword">if</span> (Math.min(pie.getAngle()-<span class="number">1</span>,animatedValue-currentStartAngle)&gt;=<span class="number">0</span>)&#123;</div><div class="line">        drawAngle = Math.min(pie.getAngle()-<span class="number">1</span>,animatedValue-currentStartAngle);</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        drawAngle = <span class="number">0</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (i==angleId)&#123;</div><div class="line">        drawArc(canvas,currentStartAngle,drawAngle,pie,rectFF,rectFTraF,reatFWhite,mPaint);</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        drawArc(canvas,currentStartAngle,drawAngle,pie,rectF,rectFTra,rectFIn,mPaint);</div><div class="line">    &#125;</div><div class="line">    currentStartAngle += pie.getAngle();</div><div class="line">&#125;</div><div class="line">canvas.restore();</div></pre></td></tr></table></figure>
+<ul>
+<li>根据当前的初始角度旋转画布。初始化扇形的起始角度，通过累加计算出下一次的起始角度。<br></li>
+<li>drawArc用于绘制扇形，和<a href="http://www.idtkm.com/customview/customview4/" target="_blank" rel="external">上一篇</a>最后的环形图片一样，通过一大一小两个扇形进行补集运算，获得可知半径的及宽度的圆环，只不过这里多了一个为了立体效果而增加的半透明圆弧。<br></li>
+</ul>
+<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E7%BB%98%E5%88%B6%E6%89%87%E5%BD%A2.png" alt="绘制扇形" title="绘制扇形" width="300"><br></p>
+<ul>
+<li>绘制扇形时，使用当前的动画值减去起始角度与当前的扇形经过的角度对比取小，作为当前扇形的需要绘制的经过角度。减1是为了生存扇形区域之间的间隔。<br></li>
+<li>angleId用于Touch时显示点击是哪一块扇形，具体判断会在TouchEvent中进行。</li>
+</ul>
+<h3 id="2、绘制文本"><a href="#2、绘制文本" class="headerlink" title="2、绘制文本"></a>2、绘制文本</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//扇形百分比文字</span></div><div class="line">currentStartAngle = mStartAngle;</div><div class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;mPieData.size(); i++)&#123;</div><div class="line">    PieData pie = mPieData.get(i);</div><div class="line">    mPaint.setColor(percentTextColor);</div><div class="line">    mPaint.setTextSize(percentTextSize);</div><div class="line">    mPaint.setTextAlign(Paint.Align.CENTER);</div><div class="line">    NumberFormat numberFormat =NumberFormat.getPercentInstance();</div><div class="line">    numberFormat.setMinimumFractionDigits(percentDecimal);</div><div class="line">    <span class="comment">//根据Paint的TextSize计算Y轴的值</span></div><div class="line">    <span class="keyword">if</span> (animatedValue&gt;pieAngles[i]-pie.getAngle()/<span class="number">2</span>&amp;&amp;percentFlag) &#123;</div><div class="line">        <span class="keyword">if</span> (i == angleId) &#123;</div><div class="line">            drawText(canvas,pie,currentStartAngle,numberFormat,<span class="keyword">true</span>);</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            <span class="keyword">if</span> (pie.getAngle() &gt; minAngle) &#123;</div><div class="line">                drawText(canvas,pie,currentStartAngle,numberFormat,<span class="keyword">false</span>);</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        currentStartAngle += pie.getAngle();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><br></p>
+<ul>
+<li><strong>文本是有方向的，无法在画布旋转后绘制</strong>，所以初始化当前扇形的起始角度为PieChart的起始角度。<br></li>
+<li>然后循环绘制文本，当扇形绘制到当前区域的1/2时，开始绘制当前区域的文字。为了防止文本遮挡视线，在绘制前需要判断此扇形经过的角度是否大于最小显示角度。<br></li>
+<li>angleId用于Touch时显示点击是哪一块扇形，具体判断会在TouchEvent中进行。<br><br></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">drawText</span><span class="params">(Canvas canvas, PieData pie ,<span class="keyword">float</span> currentStartAngle, NumberFormat numberFormat,<span class="keyword">boolean</span> flag)</span></span>&#123;</div><div class="line">    <span class="keyword">int</span> textPathX = (<span class="keyword">int</span>) (Math.cos(Math.toRadians(currentStartAngle + (pie.getAngle() / <span class="number">2</span>))) * (r + rTra) / <span class="number">2</span>);</div><div class="line">    <span class="keyword">int</span> textPathY = (<span class="keyword">int</span>) (Math.sin(Math.toRadians(currentStartAngle + (pie.getAngle() / <span class="number">2</span>))) * (r + rTra) / <span class="number">2</span>);</div><div class="line">    mPoint.x = textPathX;</div><div class="line">    mPoint.y = textPathY;</div><div class="line">    String[] strings;</div><div class="line">    <span class="keyword">if</span> (flag)&#123;</div><div class="line">        strings = <span class="keyword">new</span> String[]&#123;pie.getName() + <span class="string">""</span>, numberFormat.format(pie.getPercentage()) + <span class="string">""</span>&#125;;</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        strings = <span class="keyword">new</span> String[]&#123;numberFormat.format(pie.getPercentage()) + <span class="string">""</span>&#125;;</div><div class="line">    &#125;</div><div class="line">    textCenter(strings, mPaint, canvas, mPoint, Paint.Align.CENTER);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E7%BB%98%E5%88%B6%E6%96%87%E6%9C%AC.png" alt="绘制文本" title="绘制文本" width="300"><br><br>drawText函数的主要作用就是根据传入的Pie，获取大小扇形的半径合除以2，角度取一半，计算出扇形中心点，然后使用之前介绍的<a href="http://www.idtkm.com/customview/customview3/" target="_blank" rel="external">textCenter多行文本居中函数</a>进行文本绘制。最后累加当前扇形的起始角度，用于下一个扇形使用。<br></p>
+<h3 id="3、绘制图名"><a href="#3、绘制图名" class="headerlink" title="3、绘制图名"></a>3、绘制图名</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//饼图名</span></div><div class="line">mPaint.setColor(centerTextColor);</div><div class="line">mPaint.setTextSize(centerTextSize);</div><div class="line">mPaint.setTextAlign(Paint.Align.CENTER);</div><div class="line"><span class="comment">//根据Paint的TextSize计算Y轴的值</span></div><div class="line">mPoint.x=<span class="number">0</span>;</div><div class="line">mPoint.y=<span class="number">0</span>;</div><div class="line">String[] strings = <span class="keyword">new</span> String[]&#123;name+<span class="string">""</span>&#125;;</div><div class="line">textCenter(strings,mPaint,canvas,mPoint, Paint.Align.CENTER);</div></pre></td></tr></table></figure>
+<p>绘制图名的部分就比较简单了，和之前绘制单个Pie时类似，获取x，y坐标为(0,0),然后使用textCenter多行文本绘制函数进行文本绘制。</p>
+<h2 id="七、onTouchEvent"><a href="#七、onTouchEvent" class="headerlink" title="七、onTouchEvent"></a>七、onTouchEvent</h2><p>onTouchEvent用于处理当前的点击事件，具体内容在<a href="http://www.idtkm.com/customview/customview1/" target="_blank" rel="external">第一篇文章</a>中已经进行了说明，这里使用其中的<strong>ACTION_DOWN</strong>与<strong>ACTION_UP</strong>事件。<br></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onTouchEvent</span><span class="params">(MotionEvent event)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (touchFlag&amp;&amp;mPieData.size()&gt;<span class="number">0</span>)&#123;</div><div class="line">        <span class="keyword">switch</span> (event.getAction())&#123;</div><div class="line">            <span class="keyword">case</span> MotionEvent.ACTION_DOWN:</div><div class="line">                <span class="keyword">float</span> x = event.getX()-(mWidth/<span class="number">2</span>);</div><div class="line">                <span class="keyword">float</span> y = event.getY()-(mHeight/<span class="number">2</span>);</div><div class="line">                <span class="keyword">float</span> touchAngle = <span class="number">0</span>;</div><div class="line">                <span class="keyword">if</span> (x&lt;<span class="number">0</span>&amp;&amp;y&lt;<span class="number">0</span>)&#123;</div><div class="line">                    touchAngle += <span class="number">180</span>;</div><div class="line">                &#125;<span class="keyword">else</span> <span class="keyword">if</span> (y&lt;<span class="number">0</span>&amp;&amp;x&gt;<span class="number">0</span>)&#123;</div><div class="line">                    touchAngle += <span class="number">360</span>;</div><div class="line">                &#125;<span class="keyword">else</span> <span class="keyword">if</span> (y&gt;<span class="number">0</span>&amp;&amp;x&lt;<span class="number">0</span>)&#123;</div><div class="line">                    touchAngle += <span class="number">180</span>;</div><div class="line">                &#125;</div><div class="line">                touchAngle +=Math.toDegrees(Math.atan(y/x));</div><div class="line">                touchAngle = touchAngle-mStartAngle;</div><div class="line">                <span class="keyword">if</span> (touchAngle&lt;<span class="number">0</span>)&#123;</div><div class="line">                    touchAngle = touchAngle+<span class="number">360</span>;</div><div class="line">                &#125;</div><div class="line">                <span class="keyword">float</span> touchRadius = (<span class="keyword">float</span>) Math.sqrt(y*y+x*x);</div><div class="line">                <span class="keyword">if</span> (rTra&lt; touchRadius &amp;&amp; touchRadius&lt; r)&#123;</div><div class="line">                    angleId = -Arrays.binarySearch(pieAngles,(touchAngle))-<span class="number">1</span>;</div><div class="line">                    invalidate();</div><div class="line">                &#125;</div><div class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">            <span class="keyword">case</span> MotionEvent.ACTION_UP:</div><div class="line">                angleId = -<span class="number">1</span>;</div><div class="line">                invalidate();</div><div class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">super</span>.onTouchEvent(event);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>运行之前需要判断PieChart是否开启了点击效果，同时需要判断数据不为空。<br></li>
+<li>在用户点击下的时候，获取当前的坐标，计算出这个点与原点的距离以及角度。通过距离可以判断出是否点击在了扇形区域上，而通过角度可以判断出点击了哪一个区域。将判断出的区域Id传递给angleId值，就像我们之前在onDraw中说的那样，重新绘制，根据angleId浮出指定的扇形区域。<br></li>
+<li>用户手指离开屏幕时，重置angleId为默认值，并使用invalidate()函数，重新绘制onDraw中变化的部分。<br><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/old/onTouchEvent.png" alt="onTouchEvent" title="onTouchEvent" width="300"><br></li>
+</ul>
+<h2 id="八、小结"><a href="#八、小结" class="headerlink" title="八、小结"></a>八、小结</h2><p>经过之前4篇的知识准备，终于迎来了本章的PieChart的具体实现。在本文中重温了之前的绘制流程的各个函数，VlaueAnimator函数，以及Canvas、Path的使用方法，并使用这些方法完成了一个自定义饼图的绘制。在之后的文章中还会进行几个图表的实战，比如下面这个曲线图。<br></p>
+<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/cubic.gif" alt="曲线图" title="曲线图" width="300"><br><br>如果在阅读过程中，有任何疑问与问题，欢迎与我联系。<br><br><strong>博客:www.idtkm.com</strong><br><br><strong>GitHub:<a href="https://github.com/Idtk" target="_blank" rel="external">https://github.com/Idtk</a></strong><br><br><strong>微博:<a href="http://weibo.com/Idtk" target="_blank" rel="external">http://weibo.com/Idtk</a></strong><br><br><strong>邮箱:IdtkMa@gmail.com</strong><br><br><br><br><a href="https://github.com/Idtk/PieChart" target="_blank" rel="external">PieChart源码</a>请点击</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CustomView/" rel="tag"># CustomView</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/06/01/4、PathFigureAndLogical/" rel="next" title="Path图形与逻辑运算">
+                <i class="fa fa-chevron-left"></i> Path图形与逻辑运算
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/06/21/6、Bezier/" rel="prev" title="Path中的贝塞尔曲线">
+                Path中的贝塞尔曲线 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/header.jpg"
+               alt="Idtk" />
+          <p class="site-author-name" itemprop="name">Idtk</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Idtk" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/Idtk" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="mailto:IdtkMa@gmail.com" target="_blank" title="Email">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                  Email
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、数据需求"><span class="nav-number">1.</span> <span class="nav-text">一、数据需求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、构造函数"><span class="nav-number">2.</span> <span class="nav-text">二、构造函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、动画函数"><span class="nav-number">3.</span> <span class="nav-text">三、动画函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、onMeasure"><span class="nav-number">4.</span> <span class="nav-text">四、onMeasure</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五、onSizeChanged"><span class="nav-number">5.</span> <span class="nav-text">五、onSizeChanged</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#六、onDraw"><span class="nav-number">6.</span> <span class="nav-text">六、onDraw</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、绘制扇形"><span class="nav-number">6.1.</span> <span class="nav-text">1、绘制扇形</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、绘制文本"><span class="nav-number">6.2.</span> <span class="nav-text">2、绘制文本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3、绘制图名"><span class="nav-number">6.3.</span> <span class="nav-text">3、绘制图名</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#七、onTouchEvent"><span class="nav-number">7.</span> <span class="nav-text">七、onTouchEvent</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#八、小结"><span class="nav-number">8.</span> <span class="nav-text">八、小结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Idtk</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "a727d901f6db4dd0a57496c675fe7c96",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+
+  
+
+</body>
+</html>

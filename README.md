@@ -1,2 +1,0 @@
-# idtk.github.io
-blog

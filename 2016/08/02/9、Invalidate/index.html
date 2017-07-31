@@ -1,0 +1,828 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="CustomView," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Idtk" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="上一篇文章自定义View——View的弹性滑动中，我们对View的滑动进行了实战以及简单分析。但在文章的最后，仍然遗留了两个问题,第一个是invalidate与postInvalidate有什么区别呢？第二个是invalidate是如何调用computeScroll()方法的呢？这两个问题将在这一篇文章中进行分析。
+自定义View系列目录
+一、invalidate与postInvalidatein">
+<meta property="og:type" content="article">
+<meta property="og:title" content="View的invalidate传递与绘制流程分析">
+<meta property="og:url" content="http://yoursite.com/2016/08/02/9、Invalidate/index.html">
+<meta property="og:site_name" content="Idtk">
+<meta property="og:description" content="上一篇文章自定义View——View的弹性滑动中，我们对View的滑动进行了实战以及简单分析。但在文章的最后，仍然遗留了两个问题,第一个是invalidate与postInvalidate有什么区别呢？第二个是invalidate是如何调用computeScroll()方法的呢？这两个问题将在这一篇文章中进行分析。
+自定义View系列目录
+一、invalidate与postInvalidatein">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/invalidate.png">
+<meta property="og:updated_time" content="2017-03-12T13:06:43.597Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="View的invalidate传递与绘制流程分析">
+<meta name="twitter:description" content="上一篇文章自定义View——View的弹性滑动中，我们对View的滑动进行了实战以及简单分析。但在文章的最后，仍然遗留了两个问题,第一个是invalidate与postInvalidate有什么区别呢？第二个是invalidate是如何调用computeScroll()方法的呢？这两个问题将在这一篇文章中进行分析。
+自定义View系列目录
+一、invalidate与postInvalidatein">
+<meta name="twitter:image" content="http://ompb0h8qq.bkt.clouddn.com/old/invalidate.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/08/02/9、Invalidate/"/>
+
+
+
+
+
+  <title> View的invalidate传递与绘制流程分析 | Idtk </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  <div style="display: none;">
+    <script src="//s11.cnzz.com/z_stat.php?id=1261484069&web_id=1261484069" language="JavaScript"></script>
+  </div>
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Idtk</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/08/02/9、Invalidate/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Idtk">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Idtk">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                View的invalidate传递与绘制流程分析
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-08-02T00:00:00+08:00">
+                2016-08-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2016/08/02/9、Invalidate/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><strong>上一篇文章<a href="http://www.idtkm.com/customview/customview8/" target="_blank" rel="external">自定义View——View的弹性滑动</a>中，我们对View的滑动进行了实战以及简单分析。但在文章的最后，仍然遗留了两个问题,第一个是invalidate与postInvalidate有什么区别呢？第二个是invalidate是如何调用computeScroll()方法的呢？这两个问题将在这一篇文章中进行分析。</strong></p>
+<p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
+<h2 id="一、invalidate与postInvalidate"><a href="#一、invalidate与postInvalidate" class="headerlink" title="一、invalidate与postInvalidate"></a>一、invalidate与postInvalidate</h2><p>invalidate与postInvadlidate都是用于请求View重绘的API，invalidate在主线程中进行调用，而postInvadlidate则在子线程中进行调用。<br><br>我们来分析下postInvadlidate的源码 :<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postInvalidate</span><span class="params">()</span> </span>&#123;</div><div class="line">    postInvalidateDelayed(<span class="number">0</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>postInvalidate()蒋会调用postInvalidateDelayed(0)方法，继续跟进。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postInvalidateDelayed</span><span class="params">(<span class="keyword">long</span> delayMilliseconds)</span> </span>&#123;</div><div class="line">    <span class="keyword">final</span> AttachInfo attachInfo = mAttachInfo;</div><div class="line">    <span class="keyword">if</span> (attachInfo != <span class="keyword">null</span>) &#123;</div><div class="line">        attachInfo.mViewRootImpl.dispatchInvalidateDelayed(<span class="keyword">this</span>, delayMilliseconds);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>postInvalidateDelayed方法，通过attachInfo获取到当前的ViewRootImpl对象，调用它的dispatchInvalidateDelayed方法<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">dispatchInvalidateDelayed</span><span class="params">(View view, <span class="keyword">long</span> delayMilliseconds)</span> </span>&#123;</div><div class="line">    Message msg = mHandler.obtainMessage(MSG_INVALIDATE, view);</div><div class="line">    mHandler.sendMessageDelayed(msg, delayMilliseconds);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<a id="more"></a>
+<p>从上面的源码已经可以看出，postInvalidate的子线程这一个特性了。再继续跟下去看看。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</div><div class="line">    <span class="keyword">switch</span> (msg.what) &#123;</div><div class="line">    <span class="keyword">case</span> MSG_INVALIDATE:</div><div class="line">        ((View) msg.obj).invalidate();</div><div class="line">        <span class="keyword">break</span>;</div><div class="line"></div><div class="line">	...</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>代码跟到这里，也就明白了，postInvalidate通过sendMessageDelayed的方法，加入到了looper中，之后在handleMessage中再调用对应View的invalidate()方法，请求View重绘。</p>
+<h2 id="二、invalidate流程分析"><a href="#二、invalidate流程分析" class="headerlink" title="二、invalidate流程分析"></a>二、invalidate流程分析</h2><p>现在我们来看看invalidate是如何让View进行重绘的呢？<br><br><strong>(PS:我这里使用的API版本为23，具体的代码可能和其他的版本有稍许不同)</strong></p>
+<h3 id="1、invalidate的请求传递"><a href="#1、invalidate的请求传递" class="headerlink" title="1、invalidate的请求传递"></a>1、invalidate的请求传递</h3><p>我们的旅程从View的invalidate传递过程开始<br></p>
+<p>现在来看看View#invalidate()方法。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">invalidate</span><span class="params">()</span> </span>&#123;</div><div class="line">    invalidate(<span class="keyword">true</span>);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">invalidate</span><span class="params">(<span class="keyword">boolean</span> invalidateCache)</span> </span>&#123;</div><div class="line">    invalidateInternal(<span class="number">0</span>, <span class="number">0</span>, mRight - mLeft, mBottom - mTop, invalidateCache, <span class="keyword">true</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>invalidate调用View#invalidateInternal方法传入当前View的位置参数。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">invalidateInternal</span><span class="params">(<span class="keyword">int</span> l, <span class="keyword">int</span> t, <span class="keyword">int</span> r, <span class="keyword">int</span> b, <span class="keyword">boolean</span> invalidateCache,</span></span></div><div class="line">        <span class="keyword">boolean</span> fullInvalidate) &#123;</div><div class="line"></div><div class="line">	<span class="comment">// 如果View重绘，则它也将重绘</span></div><div class="line">    <span class="keyword">if</span> (mGhostView != <span class="keyword">null</span>) &#123;</div><div class="line">        mGhostView.invalidate(<span class="keyword">true</span>);</div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">	<span class="comment">// View是否可见，是否在动画运行中</span></div><div class="line">    <span class="keyword">if</span> (skipInvalidate()) &#123;</div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">	<span class="comment">// 根据View的标记来判断View是否需要进行重绘</span></div><div class="line">    <span class="keyword">if</span> ((mPrivateFlags &amp; (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)) == (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)</div><div class="line">            || (invalidateCache &amp;&amp; (mPrivateFlags &amp; PFLAG_DRAWING_CACHE_VALID) == PFLAG_DRAWING_CACHE_VALID)</div><div class="line">            || (mPrivateFlags &amp; PFLAG_INVALIDATED) != PFLAG_INVALIDATED</div><div class="line">            || (fullInvalidate &amp;&amp; isOpaque() != mLastIsOpaque)) &#123;</div><div class="line">        <span class="keyword">if</span> (fullInvalidate) &#123;</div><div class="line">            mLastIsOpaque = isOpaque();</div><div class="line">            mPrivateFlags &amp;= ~PFLAG_DRAWN;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">		<span class="comment">// 设置标志，表明View正在被重绘</span></div><div class="line">        mPrivateFlags |= PFLAG_DIRTY;</div><div class="line">		<span class="comment">//清除缓存，设置标志，表明重绘由当前View发起</span></div><div class="line">        <span class="keyword">if</span> (invalidateCache) &#123;</div><div class="line">            mPrivateFlags |= PFLAG_INVALIDATED;</div><div class="line">            mPrivateFlags &amp;= ~PFLAG_DRAWING_CACHE_VALID;</div><div class="line">        &#125;</div><div class="line">        <span class="comment">// 把需要重绘的View区域传递给父View</span></div><div class="line">        <span class="keyword">final</span> AttachInfo ai = mAttachInfo;</div><div class="line">        <span class="keyword">final</span> ViewParent p = mParent;</div><div class="line">        <span class="keyword">if</span> (p != <span class="keyword">null</span> &amp;&amp; ai != <span class="keyword">null</span> &amp;&amp; l &lt; r &amp;&amp; t &lt; b) &#123;</div><div class="line">            <span class="keyword">final</span> Rect damage = ai.mTmpInvalRect;</div><div class="line">			<span class="comment">// 设置重绘区域</span></div><div class="line">            damage.set(l, t, r, b);</div><div class="line">			<span class="comment">// 关键代码，调用父View的方法，向上传递重绘事件</span></div><div class="line">            p.invalidateChild(<span class="keyword">this</span>, damage);</div><div class="line">        &#125;</div><div class="line">        ...</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上述代码中，会判断当前View的状态，是否需要进行重绘，之后设置一系列标记位。通过父View的invalidateChild(this, damage)方法，将需要重绘的区域传递给父View。<br><br>接着来看下ViewGroup#invalidateChild方法，这里仅截取了其中的主要代码<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">invalidateChild</span><span class="params">(View child, <span class="keyword">final</span> Rect dirty)</span> </span>&#123;</div><div class="line">    ViewParent parent = <span class="keyword">this</span>;</div><div class="line">    <span class="keyword">final</span> AttachInfo attachInfo = mAttachInfo;</div><div class="line">    <span class="keyword">if</span> (attachInfo != <span class="keyword">null</span>) &#123;</div><div class="line">        ...</div><div class="line">		<span class="comment">// 保存子View的left、top</span></div><div class="line">		<span class="keyword">final</span> <span class="keyword">int</span>[] location = attachInfo.mInvalidateChildLocation;</div><div class="line">		location[CHILD_LEFT_INDEX] = child.mLeft;</div><div class="line">		location[CHILD_TOP_INDEX] = child.mTop;</div><div class="line">        <span class="keyword">if</span> (!childMatrix.isIdentity() ||</div><div class="line">                (mGroupFlags &amp; ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != <span class="number">0</span>) &#123;</div><div class="line">            RectF boundingRect = attachInfo.mTmpTransformRect;</div><div class="line">            boundingRect.set(dirty);</div><div class="line">            Matrix transformMatrix;</div><div class="line">            <span class="keyword">if</span> ((mGroupFlags &amp; ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != <span class="number">0</span>) &#123;</div><div class="line">                Transformation t = attachInfo.mTmpTransformation;</div><div class="line">                <span class="keyword">boolean</span> transformed = getChildStaticTransformation(child, t);</div><div class="line">                <span class="keyword">if</span> (transformed) &#123;</div><div class="line">                    transformMatrix = attachInfo.mTmpMatrix;</div><div class="line">                    transformMatrix.set(t.getMatrix());</div><div class="line">                    <span class="keyword">if</span> (!childMatrix.isIdentity()) &#123;</div><div class="line">                        transformMatrix.preConcat(childMatrix);</div><div class="line">                    &#125;</div><div class="line">                &#125; <span class="keyword">else</span> &#123;</div><div class="line">                    transformMatrix = childMatrix;</div><div class="line">                &#125;</div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                transformMatrix = childMatrix;</div><div class="line">            &#125;</div><div class="line">            transformMatrix.mapRect(boundingRect);</div><div class="line">			<span class="comment">// 设置需要重绘的区域</span></div><div class="line">            dirty.set((<span class="keyword">int</span>) (boundingRect.left - <span class="number">0.5f</span>),</div><div class="line">                    (<span class="keyword">int</span>) (boundingRect.top - <span class="number">0.5f</span>),</div><div class="line">                    (<span class="keyword">int</span>) (boundingRect.right + <span class="number">0.5f</span>),</div><div class="line">                    (<span class="keyword">int</span>) (boundingRect.bottom + <span class="number">0.5f</span>));</div><div class="line">        &#125;</div><div class="line">		<span class="comment">// 这里的do...while方法，让view可以不断的去调用父类的</span></div><div class="line">		<span class="comment">// invalidateChildInParent方法，来传递重绘请求</span></div><div class="line">        <span class="keyword">do</span> &#123;</div><div class="line">            View view = <span class="keyword">null</span>;</div><div class="line">            <span class="keyword">if</span> (parent <span class="keyword">instanceof</span> View) &#123;</div><div class="line">                view = (View) parent;</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">if</span> (drawAnimation) &#123;</div><div class="line">                <span class="keyword">if</span> (view != <span class="keyword">null</span>) &#123;</div><div class="line">                    view.mPrivateFlags |= PFLAG_DRAW_ANIMATION;</div><div class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (parent <span class="keyword">instanceof</span> ViewRootImpl) &#123;</div><div class="line">                    ((ViewRootImpl) parent).mIsAnimating = <span class="keyword">true</span>;</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">            <span class="comment">// If the parent is dirty opaque or not dirty, mark it dirty with the opaque</span></div><div class="line">            <span class="comment">// flag coming from the child that initiated the invalidate</span></div><div class="line">            <span class="keyword">if</span> (view != <span class="keyword">null</span>) &#123;</div><div class="line">                <span class="keyword">if</span> ((view.mViewFlags &amp; FADING_EDGE_MASK) != <span class="number">0</span> &amp;&amp;</div><div class="line">                        view.getSolidColor() == <span class="number">0</span>) &#123;</div><div class="line">                    opaqueFlag = PFLAG_DIRTY;</div><div class="line">                &#125;</div><div class="line">                <span class="keyword">if</span> ((view.mPrivateFlags &amp; PFLAG_DIRTY_MASK) != PFLAG_DIRTY) &#123;</div><div class="line">                    view.mPrivateFlags = (view.mPrivateFlags &amp; ~PFLAG_DIRTY_MASK) | opaqueFlag;</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">			<span class="comment">// 这里是关键代码，他会调用父类的</span></div><div class="line">            parent = parent.invalidateChildInParent(location, dirty);</div><div class="line">            <span class="keyword">if</span> (view != <span class="keyword">null</span>) &#123;</div><div class="line">                <span class="comment">// Account for transform on current parent</span></div><div class="line">                Matrix m = view.getMatrix();</div><div class="line">                <span class="keyword">if</span> (!m.isIdentity()) &#123;</div><div class="line">                    RectF boundingRect = attachInfo.mTmpTransformRect;</div><div class="line">                    boundingRect.set(dirty);</div><div class="line">                    m.mapRect(boundingRect);</div><div class="line">                    dirty.set((<span class="keyword">int</span>) (boundingRect.left - <span class="number">0.5f</span>),</div><div class="line">                            (<span class="keyword">int</span>) (boundingRect.top - <span class="number">0.5f</span>),</div><div class="line">                            (<span class="keyword">int</span>) (boundingRect.right + <span class="number">0.5f</span>),</div><div class="line">                            (<span class="keyword">int</span>) (boundingRect.bottom + <span class="number">0.5f</span>));</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">        &#125; <span class="keyword">while</span> (parent != <span class="keyword">null</span>);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上述代码中，设置了需要重绘的区域dirty。之后再do…while方法中，反复的调用<strong>parent = parent.invalidateChildInParent(location, dirty)</strong>方法，来调用父类的invalidateChildInParent对View的重绘请求进行传递。这里的parent有可能是ViewGroup，也有可能是ViewRoot，我们先来看看ViewGroup#invalidateChildInParent方法<br><br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> ViewParent <span class="title">invalidateChildInParent</span><span class="params">(<span class="keyword">final</span> <span class="keyword">int</span>[] location, <span class="keyword">final</span> Rect dirty)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> ((mPrivateFlags &amp; PFLAG_DRAWN) == PFLAG_DRAWN ||</div><div class="line">            (mPrivateFlags &amp; PFLAG_DRAWING_CACHE_VALID) == PFLAG_DRAWING_CACHE_VALID) &#123;</div><div class="line">        <span class="keyword">if</span> ((mGroupFlags &amp; (FLAG_OPTIMIZE_INVALIDATE | FLAG_ANIMATION_DONE)) !=</div><div class="line">                    FLAG_OPTIMIZE_INVALIDATE) &#123;</div><div class="line">			<span class="comment">// 子View中的布局位置转换为父View中的布局位置</span></div><div class="line">            dirty.offset(location[CHILD_LEFT_INDEX] - mScrollX,</div><div class="line">                    location[CHILD_TOP_INDEX] - mScrollY);</div><div class="line">            <span class="keyword">if</span> ((mGroupFlags &amp; FLAG_CLIP_CHILDREN) == <span class="number">0</span>) &#123;</div><div class="line">				<span class="comment">// 合并绘制区域集合</span></div><div class="line">                dirty.union(<span class="number">0</span>, <span class="number">0</span>, mRight - mLeft, mBottom - mTop);</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> left = mLeft;</div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> top = mTop;</div><div class="line">            <span class="keyword">if</span> ((mGroupFlags &amp; FLAG_CLIP_CHILDREN) == FLAG_CLIP_CHILDREN) &#123;</div><div class="line">                <span class="keyword">if</span> (!dirty.intersect(<span class="number">0</span>, <span class="number">0</span>, mRight - left, mBottom - top)) &#123;</div><div class="line">                    dirty.setEmpty();</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">            mPrivateFlags &amp;= ~PFLAG_DRAWING_CACHE_VALID;</div><div class="line">            location[CHILD_LEFT_INDEX] = left;</div><div class="line">            location[CHILD_TOP_INDEX] = top;</div><div class="line">            <span class="keyword">if</span> (mLayerType != LAYER_TYPE_NONE) &#123;</div><div class="line">                mPrivateFlags |= PFLAG_INVALIDATED;</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">return</span> mParent;</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            mPrivateFlags &amp;= ~PFLAG_DRAWN &amp; ~PFLAG_DRAWING_CACHE_VALID;</div><div class="line">            location[CHILD_LEFT_INDEX] = mLeft;</div><div class="line">            location[CHILD_TOP_INDEX] = mTop;</div><div class="line">            <span class="keyword">if</span> ((mGroupFlags &amp; FLAG_CLIP_CHILDREN) == FLAG_CLIP_CHILDREN) &#123;</div><div class="line">                dirty.set(<span class="number">0</span>, <span class="number">0</span>, mRight - mLeft, mBottom - mTop);</div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                <span class="comment">// in case the dirty rect extends outside the bounds of this container</span></div><div class="line">                dirty.union(<span class="number">0</span>, <span class="number">0</span>, mRight - mLeft, mBottom - mTop);</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">if</span> (mLayerType != LAYER_TYPE_NONE) &#123;</div><div class="line">                mPrivateFlags |= PFLAG_INVALIDATED;</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">return</span> mParent;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>在上述代码中，将会使用offset，把子View需要重绘的坐标区域转换为父View中的坐标区域。之后使用union对子View与父View的区域进行集合运算，获得需要绘制的区域。<br><br>接下来我们再来看看ViewRoot#invalidateChildInParent方法，ViewRoot并不是View，ViewRoot的实现类为ViewRootImpl，我们来看下它的invalidateChildInParent方法。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> ViewParent <span class="title">invalidateChildInParent</span><span class="params">(<span class="keyword">int</span>[] location, Rect dirty)</span> </span>&#123;</div><div class="line">	<span class="comment">// 检查线程是否为创建View的线程，即创建View的线程中是否含有此ViewRootImpl</span></div><div class="line">    checkThread();</div><div class="line">    <span class="keyword">if</span> (DEBUG_DRAW) Log.v(TAG, <span class="string">"Invalidate child: "</span> + dirty);</div><div class="line">	<span class="comment">// 检查重绘区域</span></div><div class="line">    <span class="keyword">if</span> (dirty == <span class="keyword">null</span>) &#123;</div><div class="line">        invalidate();</div><div class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (dirty.isEmpty() &amp;&amp; !mIsAnimating) &#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">    &#125;</div><div class="line">	<span class="comment">// 动画和滑动的检查设置</span></div><div class="line">    <span class="keyword">if</span> (mCurScrollY != <span class="number">0</span> || mTranslator != <span class="keyword">null</span>) &#123;</div><div class="line">        mTempRect.set(dirty);</div><div class="line">        dirty = mTempRect;</div><div class="line">        <span class="keyword">if</span> (mCurScrollY != <span class="number">0</span>) &#123;</div><div class="line">            dirty.offset(<span class="number">0</span>, -mCurScrollY);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span> (mTranslator != <span class="keyword">null</span>) &#123;</div><div class="line">            mTranslator.translateRectInAppWindowToScreen(dirty);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span> (mAttachInfo.mScalingRequired) &#123;</div><div class="line">            dirty.inset(-<span class="number">1</span>, -<span class="number">1</span>);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    invalidateRectOnScreen(dirty);</div><div class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">invalidateRectOnScreen</span><span class="params">(Rect dirty)</span> </span>&#123;</div><div class="line">    ...</div><div class="line">    <span class="keyword">if</span> (!mWillDrawSoon &amp;&amp; (intersected || mIsAnimating)) &#123;</div><div class="line">		<span class="comment">//关键代码，ViewTree列表</span></div><div class="line">        scheduleTraversals();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上述代码中，进入之后会线程以及重绘区域的检查，之后调用invalidateRectOnScreen方法，然后调用scheduleTraversals()方法。<br></p>
+<p>来继续看看ViewRootImpl#scheduleTraversals()。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">scheduleTraversals</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (!mTraversalScheduled) &#123;</div><div class="line">        mTraversalScheduled = <span class="keyword">true</span>;</div><div class="line">		<span class="comment">// handler消息传递绘制请求</span></div><div class="line">        mTraversalBarrier = mHandler.getLooper().getQueue().postSyncBarrier();</div><div class="line">        mChoreographer.postCallback(</div><div class="line">                Choreographer.CALLBACK_TRAVERSAL, mTraversalRunnable, <span class="keyword">null</span>);</div><div class="line">        <span class="keyword">if</span> (!mUnbufferedInputDispatch) &#123;</div><div class="line">            scheduleConsumeBatchedInput();</div><div class="line">        &#125;</div><div class="line">        notifyRendererOfFramePending();</div><div class="line">        pokeDrawLockIfNeeded();</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"></div><div class="line"><span class="keyword">final</span> TraversalRunnable mTraversalRunnable = <span class="keyword">new</span> TraversalRunnable();</div><div class="line"></div><div class="line"><span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">TraversalRunnable</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line">        doTraversal();</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">doTraversal</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (mTraversalScheduled) &#123;</div><div class="line">        mTraversalScheduled = <span class="keyword">false</span>;</div><div class="line">        mHandler.getLooper().getQueue().removeSyncBarrier(mTraversalBarrier);</div><div class="line">        <span class="keyword">if</span> (mProfile) &#123;</div><div class="line">            Debug.startMethodTracing(<span class="string">"ViewAncestor"</span>);</div><div class="line">        &#125;</div><div class="line">		<span class="comment">// 关键代码，执行ViewTree遍历</span></div><div class="line">        performTraversals();</div><div class="line">        <span class="keyword">if</span> (mProfile) &#123;</div><div class="line">            Debug.stopMethodTracing();</div><div class="line">            mProfile = <span class="keyword">false</span>;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上述代码中，将会之后handler，之后会调用mTraversalRunnable类，从而调用doTraversal方法，最后调用performTraversals()执行ViewTree的遍历。<br></p>
+<p>现在继续查看ViewRootImpl#performTraversals()方法。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">performTraversals</span><span class="params">()</span> </span>&#123;</div><div class="line">	...</div><div class="line">    <span class="keyword">if</span> (!cancelDraw &amp;&amp; !newSurface) &#123;</div><div class="line">        <span class="keyword">if</span> (!skipDraw || mReportNextDraw) &#123;</div><div class="line">            <span class="keyword">if</span> (mPendingTransitions != <span class="keyword">null</span> &amp;&amp; mPendingTransitions.size() &gt; <span class="number">0</span>) &#123;</div><div class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; mPendingTransitions.size(); ++i) &#123;</div><div class="line">                    mPendingTransitions.get(i).startChangingAnimations();</div><div class="line">                &#125;</div><div class="line">                mPendingTransitions.clear();</div><div class="line">            &#125;</div><div class="line">			<span class="comment">// 关键代码</span></div><div class="line">            performDraw();</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">	...</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">performDraw</span><span class="params">()</span> </span>&#123;</div><div class="line">    ...</div><div class="line">	<span class="keyword">final</span> <span class="keyword">boolean</span> fullRedrawNeeded = mFullRedrawNeeded;</div><div class="line">    mFullRedrawNeeded = <span class="keyword">false</span>;</div><div class="line">    mIsDrawing = <span class="keyword">true</span>;</div><div class="line">    Trace.traceBegin(Trace.TRACE_TAG_VIEW, <span class="string">"draw"</span>);</div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line">		<span class="comment">// 关键代码</span></div><div class="line">        draw(fullRedrawNeeded);</div><div class="line">    &#125; <span class="keyword">finally</span> &#123;</div><div class="line">        mIsDrawing = <span class="keyword">false</span>;</div><div class="line">        Trace.traceEnd(Trace.TRACE_TAG_VIEW);</div><div class="line">    &#125;</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>在其中进行View的是否可见，是否为surfasce，是否正在绘制，是否存在于删除列表中等判断，之后调用performDraw()开始执行绘制。在performDraw()又调用了ViewRootImpl的draw方法，并传递了fullRedrawNeeded参数，此参数源自mFullRedrawNeeded成员变量，用于表示是否需要重新绘制全部的View。现在继续看看ViewRootImpl#draw源码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">draw</span><span class="params">(<span class="keyword">boolean</span> fullRedrawNeeded)</span> </span>&#123;</div><div class="line">    Surface surface = mSurface;</div><div class="line">    ...</div><div class="line">	<span class="comment">// 获取mDirty，该值表示需要重绘的区域</span></div><div class="line">    <span class="keyword">final</span> Rect dirty = mDirty;</div><div class="line">    <span class="keyword">if</span> (mSurfaceHolder != <span class="keyword">null</span>) &#123;</div><div class="line">        <span class="comment">// The app owns the surface, we won't draw.</span></div><div class="line">        dirty.setEmpty();</div><div class="line">        <span class="keyword">if</span> (animating) &#123;</div><div class="line">            <span class="keyword">if</span> (mScroller != <span class="keyword">null</span>) &#123;</div><div class="line">                mScroller.abortAnimation();</div><div class="line">            &#125;</div><div class="line">            disposeResizeBuffer();</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">	<span class="comment">// 如果为ture，则设置dirty区域为全屏</span></div><div class="line">    <span class="keyword">if</span> (fullRedrawNeeded) &#123;</div><div class="line">        mAttachInfo.mIgnoreDirtyState = <span class="keyword">true</span>;</div><div class="line">        dirty.set(<span class="number">0</span>, <span class="number">0</span>, (<span class="keyword">int</span>) (mWidth * appScale + <span class="number">0.5f</span>), (<span class="keyword">int</span>) (mHeight * appScale + <span class="number">0.5f</span>));</div><div class="line">    &#125;</div><div class="line">    ...</div><div class="line">	<span class="comment">// 重绘区域、动画判断</span></div><div class="line">		<span class="comment">// 硬件渲染判断</span></div><div class="line">			<span class="comment">// 关键代码</span></div><div class="line">            <span class="keyword">if</span> (!drawSoftware(surface, mAttachInfo, xOffset, yOffset, scalingRequired, dirty)) &#123;</div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            &#125;</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在draw方法中，根据传如fullRedrawNeeded参数，设置需要重绘的dirty区域，最后调用drawSoftware方法，把参数传递进去，现在继续看ViewRootImpl#drawSoftware源码。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">drawSoftware</span><span class="params">(Surface surface, AttachInfo attachInfo, <span class="keyword">int</span> xoff, <span class="keyword">int</span> yoff,</span></span></div><div class="line">        <span class="keyword">boolean</span> scalingRequired, Rect dirty) &#123;</div><div class="line">    ...</div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (!canvas.isOpaque() || yoff != <span class="number">0</span> || xoff != <span class="number">0</span>) &#123;</div><div class="line">            canvas.drawColor(<span class="number">0</span>, PorterDuff.Mode.CLEAR);</div><div class="line">        &#125;</div><div class="line">        dirty.setEmpty();</div><div class="line">        mIsAnimating = <span class="keyword">false</span>;</div><div class="line">        mView.mPrivateFlags |= View.PFLAG_DRAWN;</div><div class="line"></div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            canvas.translate(-xoff, -yoff);</div><div class="line">            <span class="keyword">if</span> (mTranslator != <span class="keyword">null</span>) &#123;</div><div class="line">                mTranslator.translateCanvas(canvas);</div><div class="line">            &#125;</div><div class="line">            canvas.setScreenDensity(scalingRequired ? mNoncompatDensity : <span class="number">0</span>);</div><div class="line">            attachInfo.mSetIgnoreDirtyState = <span class="keyword">false</span>;</div><div class="line">			<span class="comment">// 关键代码，mView为DecorView，开启View绘制</span></div><div class="line">            mView.draw(canvas);</div><div class="line">            drawAccessibilityFocusedDrawableIfNeeded(canvas);</div><div class="line">        &#125; <span class="keyword">finally</span> &#123;</div><div class="line">            <span class="keyword">if</span> (!attachInfo.mSetIgnoreDirtyState) &#123;</div><div class="line">                <span class="comment">// Only clear the flag if it was not set during the mView.draw() call</span></div><div class="line">                attachInfo.mIgnoreDirtyState = <span class="keyword">false</span>;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">	...</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上述代码中，首先对canvas进行一些属性设置，包括色块、平移等。之后调用mView.draw(canvas)方法，开始对View进行绘制。mView就是window中的顶级视图DecorView(这个坑会在之后的文章中说明，这里当做一个顶级的ViewGroup即可)。</p>
+<h3 id="2、绘制流程"><a href="#2、绘制流程" class="headerlink" title="2、绘制流程"></a>2、绘制流程</h3><p>DecorView继承自FrameLayout，而ViewGroup的draw方法继承自View，so，所以我们直接看View#draw即可。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">draw</span><span class="params">(Canvas canvas)</span> </span>&#123;</div><div class="line">    <span class="keyword">final</span> <span class="keyword">int</span> privateFlags = mPrivateFlags;</div><div class="line">    <span class="keyword">final</span> <span class="keyword">boolean</span> dirtyOpaque = (privateFlags &amp; PFLAG_DIRTY_MASK) == PFLAG_DIRTY_OPAQUE &amp;&amp;</div><div class="line">            (mAttachInfo == <span class="keyword">null</span> || !mAttachInfo.mIgnoreDirtyState);</div><div class="line">    mPrivateFlags = (privateFlags &amp; ~PFLAG_DIRTY_MASK) | PFLAG_DRAWN;</div><div class="line">    <span class="comment">/*</span></div><div class="line">     * Draw traversal performs several drawing steps which must be executed</div><div class="line">     * in the appropriate order:</div><div class="line">     *</div><div class="line">     *      1. Draw the background</div><div class="line">     *      2. If necessary, save the canvas' layers to prepare for fading</div><div class="line">     *      3. Draw view's content</div><div class="line">     *      4. Draw children</div><div class="line">     *      5. If necessary, draw the fading edges and restore layers</div><div class="line">     *      6. Draw decorations (scrollbars for instance)</div><div class="line">     */</div><div class="line">    <span class="comment">// Step 1, draw the background, if needed</span></div><div class="line">    <span class="keyword">int</span> saveCount;</div><div class="line">    <span class="keyword">if</span> (!dirtyOpaque) &#123;</div><div class="line">        drawBackground(canvas);</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// skip step 2 &amp; 5 if possible (common case)</span></div><div class="line">    <span class="keyword">final</span> <span class="keyword">int</span> viewFlags = mViewFlags;</div><div class="line">    <span class="keyword">boolean</span> horizontalEdges = (viewFlags &amp; FADING_EDGE_HORIZONTAL) != <span class="number">0</span>;</div><div class="line">    <span class="keyword">boolean</span> verticalEdges = (viewFlags &amp; FADING_EDGE_VERTICAL) != <span class="number">0</span>;</div><div class="line">    <span class="keyword">if</span> (!verticalEdges &amp;&amp; !horizontalEdges) &#123;</div><div class="line">        <span class="comment">// Step 3, draw the content</span></div><div class="line">        <span class="keyword">if</span> (!dirtyOpaque) onDraw(canvas);</div><div class="line">        <span class="comment">// Step 4, draw the children</span></div><div class="line">        dispatchDraw(canvas);</div><div class="line">        <span class="comment">// Overlay is part of the content and draws beneath Foreground</span></div><div class="line">        <span class="keyword">if</span> (mOverlay != <span class="keyword">null</span> &amp;&amp; !mOverlay.isEmpty()) &#123;</div><div class="line">            mOverlay.getOverlayView().dispatchDraw(canvas);</div><div class="line">        &#125;</div><div class="line">        <span class="comment">// Step 6, draw decorations (foreground, scrollbars)</span></div><div class="line">        onDrawForeground(canvas);</div><div class="line">        <span class="comment">// we're done...</span></div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>draw方法中，官方对其的步骤进行了清晰的注释，我们来看下流程，在执行流程之前会检查绘制区域是否透明:</p>
+<ul>
+<li>1、绘制View背景，如果透明则不绘制</li>
+<li>2、如果需要，则保存画布的图层</li>
+<li>3、绘制View内容，如果透明则不绘制</li>
+<li>4、绘制子View————这个很重要</li>
+<li>5、如果需要，则绘制View的褪色边缘和恢复图层</li>
+<li>6、绘制装饰滚动条</li>
+</ul>
+<p>这里最重要的步骤是第四步，绘制子View，现在我们来看下这个ViewGroup#dispatchDraw(canvas)方法，注意这里的View是一个DecorView，所以要在ViewGroup中去查看这个方法，View中的这个方法是一个空方法。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">dispatchDraw</span><span class="params">(Canvas canvas)</span> </span>&#123;</div><div class="line">    ...</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; childrenCount; i++) &#123;</div><div class="line">        <span class="keyword">while</span> (transientIndex &gt;= <span class="number">0</span> &amp;&amp; mTransientIndices.get(transientIndex) == i) &#123;</div><div class="line">            <span class="keyword">final</span> View transientChild = mTransientViews.get(transientIndex);</div><div class="line">            <span class="keyword">if</span> ((transientChild.mViewFlags &amp; VISIBILITY_MASK) == VISIBLE ||</div><div class="line">                    transientChild.getAnimation() != <span class="keyword">null</span>) &#123;</div><div class="line">                more |= drawChild(canvas, transientChild, drawingTime);</div><div class="line">            &#125;</div><div class="line">            transientIndex++;</div><div class="line">            <span class="keyword">if</span> (transientIndex &gt;= transientCount) &#123;</div><div class="line">                transientIndex = -<span class="number">1</span>;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">int</span> childIndex = customOrder ? getChildDrawingOrder(childrenCount, i) : i;</div><div class="line">        <span class="keyword">final</span> View child = (preorderedList == <span class="keyword">null</span>)</div><div class="line">                ? children[childIndex] : preorderedList.get(childIndex);</div><div class="line">        <span class="keyword">if</span> ((child.mViewFlags &amp; VISIBILITY_MASK) == VISIBLE || child.getAnimation() != <span class="keyword">null</span>) &#123;</div><div class="line">            more |= drawChild(canvas, child, drawingTime);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">while</span> (transientIndex &gt;= <span class="number">0</span>) &#123;</div><div class="line">        <span class="comment">// there may be additional transient views after the normal views</span></div><div class="line">        <span class="keyword">final</span> View transientChild = mTransientViews.get(transientIndex);</div><div class="line">        <span class="keyword">if</span> ((transientChild.mViewFlags &amp; VISIBILITY_MASK) == VISIBLE ||</div><div class="line">                transientChild.getAnimation() != <span class="keyword">null</span>) &#123;</div><div class="line">            more |= drawChild(canvas, transientChild, drawingTime);</div><div class="line">        &#125;</div><div class="line">        transientIndex++;</div><div class="line">        <span class="keyword">if</span> (transientIndex &gt;= transientCount) &#123;</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上述代码对所有的子View进行遍历，并调用ViewGroup#drawChild方法。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">drawChild</span><span class="params">(Canvas canvas, View child, <span class="keyword">long</span> drawingTime)</span> </span>&#123;</div><div class="line">    <span class="keyword">return</span> child.draw(canvas, <span class="keyword">this</span>, drawingTime);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>drawChild又调用了子View的draw方法，这样绘制就传递了下去，当然这个draw方法和之前这一小节一开始介绍的View#draw方法并不一样，我们来看看<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">draw</span><span class="params">(Canvas canvas, ViewGroup parent, <span class="keyword">long</span> drawingTime)</span> </span>&#123;</div><div class="line">	...</div><div class="line">	<span class="keyword">if</span> (!drawingWithRenderNode) &#123;</div><div class="line">    	computeScroll();</div><div class="line">    	sx = mScrollX;</div><div class="line">    	sy = mScrollY;</div><div class="line">	&#125;</div><div class="line">	...</div><div class="line">    <span class="keyword">if</span> (!drawingWithDrawingCache) &#123;</div><div class="line">        <span class="keyword">if</span> (drawingWithRenderNode) &#123;</div><div class="line">            mPrivateFlags &amp;= ~PFLAG_DIRTY_MASK;</div><div class="line">            ((DisplayListCanvas) canvas).drawRenderNode(renderNode);</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            <span class="comment">// Fast path for layouts with no backgrounds</span></div><div class="line">            <span class="keyword">if</span> ((mPrivateFlags &amp; PFLAG_SKIP_DRAW) == PFLAG_SKIP_DRAW) &#123;</div><div class="line">                mPrivateFlags &amp;= ~PFLAG_DIRTY_MASK;</div><div class="line">                dispatchDraw(canvas);</div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                draw(canvas);</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (cache != <span class="keyword">null</span>) &#123;</div><div class="line">        mPrivateFlags &amp;= ~PFLAG_DIRTY_MASK;</div><div class="line">        <span class="keyword">if</span> (layerType == LAYER_TYPE_NONE) &#123;</div><div class="line">            <span class="comment">// no layer paint, use temporary paint to draw bitmap</span></div><div class="line">            Paint cachePaint = parent.mCachePaint;</div><div class="line">            <span class="keyword">if</span> (cachePaint == <span class="keyword">null</span>) &#123;</div><div class="line">                cachePaint = <span class="keyword">new</span> Paint();</div><div class="line">                cachePaint.setDither(<span class="keyword">false</span>);</div><div class="line">                parent.mCachePaint = cachePaint;</div><div class="line">            &#125;</div><div class="line">            cachePaint.setAlpha((<span class="keyword">int</span>) (alpha * <span class="number">255</span>));</div><div class="line">            canvas.drawBitmap(cache, <span class="number">0.0f</span>, <span class="number">0.0f</span>, cachePaint);</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            <span class="comment">// use layer paint to draw the bitmap, merging the two alphas, but also restore</span></div><div class="line">            <span class="keyword">int</span> layerPaintAlpha = mLayerPaint.getAlpha();</div><div class="line">            mLayerPaint.setAlpha((<span class="keyword">int</span>) (alpha * layerPaintAlpha));</div><div class="line">            canvas.drawBitmap(cache, <span class="number">0.0f</span>, <span class="number">0.0f</span>, mLayerPaint);</div><div class="line">            mLayerPaint.setAlpha(layerPaintAlpha);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">	...</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上述代码会先判断之前是否进行过了绘制，如果没有则进入快速绘制通道，对没有背景的View进行绘制。判断是否需要跳过自身的draw绘制方法，如果跳过则进入dispatchDraw，不跳过则进入当前View的draw方法，即这一小节开头的draw方法，就此形成了循环。同时我们在这里看到了<strong>computeScroll()</strong>方法，也就印证了上一篇文章对于弹性滑动过程的描述。<br></p>
+<p>流程图如下:</p>
+<p><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/old/invalidate.png" alt="invalidate" title="invalidate" width="800"><br></p>
+<h2 id="三、小结"><a href="#三、小结" class="headerlink" title="三、小结"></a>三、小结</h2><p>本文对上一篇遗留的问题postInvalidate与invalidate的区别进行了回答与分析，对invalidate的传递流程，以及View的绘制流程进行了源码分析，解答了invalidate是如何调用computeScroll()的问题。如果在阅读过程中，有任何疑问与问题，欢迎与我联系。<br></p>
+<p><strong>博客:www.idtkm.com</strong><br><br><strong>GitHub:<a href="https://github.com/Idtk" target="_blank" rel="external">https://github.com/Idtk</a></strong><br><br><strong>微博:<a href="http://weibo.com/Idtk" target="_blank" rel="external">http://weibo.com/Idtk</a></strong><br><br><strong>邮箱:IdtkMa@gmail.com</strong><br><br><br></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CustomView/" rel="tag"># CustomView</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/07/27/8、Scroll/" rel="next" title="View的弹性滑动">
+                <i class="fa fa-chevron-left"></i> View的弹性滑动
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/08/10/10、RequestLayout/" rel="prev" title="View的requestLayout传递与测量、布局流程分析">
+                View的requestLayout传递与测量、布局流程分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/header.jpg"
+               alt="Idtk" />
+          <p class="site-author-name" itemprop="name">Idtk</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Idtk" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/Idtk" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="mailto:IdtkMa@gmail.com" target="_blank" title="Email">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                  Email
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、invalidate与postInvalidate"><span class="nav-number">1.</span> <span class="nav-text">一、invalidate与postInvalidate</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、invalidate流程分析"><span class="nav-number">2.</span> <span class="nav-text">二、invalidate流程分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、invalidate的请求传递"><span class="nav-number">2.1.</span> <span class="nav-text">1、invalidate的请求传递</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、绘制流程"><span class="nav-number">2.2.</span> <span class="nav-text">2、绘制流程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、小结"><span class="nav-number">3.</span> <span class="nav-text">三、小结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Idtk</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "a727d901f6db4dd0a57496c675fe7c96",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+
+  
+
+</body>
+</html>

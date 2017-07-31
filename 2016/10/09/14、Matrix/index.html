@@ -1,0 +1,892 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="CustomView," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Idtk" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="自定义View系列目录
+一、Matrix结构在Android开发中，矩阵是一个非常强大且有趣的工具，在之前的一篇文章中对ColorMatrix的原理进行了详细的分析，用其实现了一些简单的颜色过滤功能，这一次我们来探寻一下同样强大的Matrix，它具有更改图像图形的有趣功能。我们先来看看Matrix的结构。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Matrix原理">
+<meta property="og:url" content="http://yoursite.com/2016/10/09/14、Matrix/index.html">
+<meta property="og:site_name" content="Idtk">
+<meta property="og:description" content="自定义View系列目录
+一、Matrix结构在Android开发中，矩阵是一个非常强大且有趣的工具，在之前的一篇文章中对ColorMatrix的原理进行了详细的分析，用其实现了一些简单的颜色过滤功能，这一次我们来探寻一下同样强大的Matrix，它具有更改图像图形的有趣功能。我们先来看看Matrix的结构。">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20\left%20[%20\begin{matrix}%20MSCALE\\_X%20&%20MSKEW\\_X%20&%20MTRANS\\_X%20\\\\\\%20MSKEW\\_Y%20&%20MSCALE\\_Y%20&%20MTRANS\\_Y%20\\\\\\%20MPERSP\\_0%20&%20MPERSP\\_1%20&%20MPERSP\\_2%20\end{1}%20\right%20]%20$$">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/14/Matix0.png">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20k_0%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20k_1%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20x%20=%20k_0\cdot%20x_0%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20y%20=%20k_1\cdot%20y_0%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20x\\\y\\\1\end{1}%20\right%20]%20%20=%20\left%20[%20\begin{matrix}%20k_0%20&%200%20&%200%20\\\%200&%20k_1%20&%200%20\\\%200%20&%200%20&%201\end{1}%20\right%20]%20\left%20[%20\begin{matrix}%20x_0\\\y_0\\\1\end{1}%20\right%20]%20$$">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/14/缩放.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/14/Matix1.png">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20x%20=%20x_0%20+%20k\\cdot%20y_0%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20y%20=%20y_0%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20x\\\y\\\1\end{1}%20\right%20]%20%20=%20\left%20[%20\begin{matrix}%201%20&%20k%20&%200%20\\\%200&%201%20&%200%20\\\%200%20&%200%20&%201\end{1}%20\right%20]%20\left%20[%20\begin{matrix}%20x_0\\\y_0\\\1\end{1}%20\right%20]%20$$">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/14/水平错切.png">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20x%20=%20x_0%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20y%20=%20y_0%20+%20k\cdot%20x_0%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20x\\\y\\\1\end{1}%20\right%20]%20%20=%20\left%20[%20\begin{matrix}%201%20&%200%20&%200%20\\\%20k&%201%20&%200%20\\\%200%20&%200%20&%201\end{1}%20\right%20]%20\left%20[%20\begin{matrix}%20x_0\\\y_0\\\1\end{1}%20\right%20]%20$$">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/14/垂直错切.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/14/Matix2.png">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20x_0%20,%20y_0%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20x%20,%20y%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20x%20=%20x_0%20+%20\Delta%20x%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20y%20=%20y_0%20+%20\Delta%20y%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20x\\\y\\\1\end{1}%20\right%20]%20%20=%20\left%20[%20\begin{matrix}%201%20&%200%20&%20\Delta%20x%20\\\%200&%201%20&%20\Delta%20y%20\\\%200%20&%200%20&%201\end{1}%20\right%20]%20\left%20[%20\begin{matrix}%20x_0\\\y_0\\\1\end{1}%20\right%20]%20$$">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/14/平移.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/14/Matix3.png">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20x_0,y_0%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20x,y%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20x_0%20=%20r\cdot\cos%20\alpha%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20y_0%20=%20r\cdot\sin%20\alpha%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20x%20=%20r%20\cdot\cos%20\left(%20\alpha%20+%20\theta\right%20">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20y%20=%20r%20\cdot%20\sin%20\left(%20\alpha%20+%20\theta\right%20">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20x\\\y\\\1\end{1}%20\right%20]%20%20=%20\left%20[%20\begin{matrix}%20\cos\theta%20&%20-\sin\theta%20&%200%20\\\%20\sin\theta&%20\cos\theta%20&%200%20\\\%200%20&%200%20&%201\end{1}%20\right%20]%20\left%20[%20\begin{matrix}%20x_0\\\y_0\\\1\end{1}%20\right%20]%20$$">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/14/旋转.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/14/Matix4.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/14/透视1.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/14/透视3.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/14/透视2.png">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/14/Matix5.png">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20M'%20=%20M%20\cdot%20S%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20&%20&\\\%20&%20Result%20&%20Matrix%20&\\\%20&%20&%20\end{1}%20\right%20]%20=%20\left%20[%20\begin{matrix}%20&%20&\\\%20&%20Initial%20&%20Matrix%20&\\\%20&%20&%20\end{1}%20\right%20]%20%20\left%20[%20\begin{matrix}%20sx%20&%200%20&%200%20\\\%200&%20sy%20&%200%20\\\%200%20&%200%20&%201\end{1}%20\right%20]%20%20\left%20[%20\begin{matrix}%201%20&%200%20&%20tx%20\\\%200&%201%20&%20ty%20\\\%200%20&%200%20&%201\end{1}%20\right%20]%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20M'%20=%20S%20\cdot%20M%20$$">
+<meta property="og:image" content="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20&%20&\\\%20&%20Result%20&%20Matrix%20&\\\%20&%20&%20\end{1}%20\right%20]%20=%20\left%20[%20\begin{matrix}%201%20&%200%20&%20tx%20\\\%200&%201%20&%20ty%20\\\%200%20&%200%20&%201\end{1}%20\right%20]%20%20\left%20[%20\begin{matrix}%20sx%20&%200%20&%200%20\\\%200&%20sy%20&%200%20\\\%200%20&%200%20&%201\end{1}%20\right%20]%20\left%20[%20\begin{matrix}%20&%20&\\\%20&%20Initial%20&%20Matrix%20&\\\%20&%20&%20\end{1}%20\right%20]%20%20$$">
+<meta property="og:updated_time" content="2017-03-12T13:39:05.822Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Matrix原理">
+<meta name="twitter:description" content="自定义View系列目录
+一、Matrix结构在Android开发中，矩阵是一个非常强大且有趣的工具，在之前的一篇文章中对ColorMatrix的原理进行了详细的分析，用其实现了一些简单的颜色过滤功能，这一次我们来探寻一下同样强大的Matrix，它具有更改图像图形的有趣功能。我们先来看看Matrix的结构。">
+<meta name="twitter:image" content="http://latex.codecogs.com/png.latex?$$%20\left%20[%20\begin{matrix}%20MSCALE\\_X%20&%20MSKEW\\_X%20&%20MTRANS\\_X%20\\\\\\%20MSKEW\\_Y%20&%20MSCALE\\_Y%20&%20MTRANS\\_Y%20\\\\\\%20MPERSP\\_0%20&%20MPERSP\\_1%20&%20MPERSP\\_2%20\end{1}%20\right%20]%20$$">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/10/09/14、Matrix/"/>
+
+
+
+
+
+  <title> Matrix原理 | Idtk </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  <div style="display: none;">
+    <script src="//s11.cnzz.com/z_stat.php?id=1261484069&web_id=1261484069" language="JavaScript"></script>
+  </div>
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Idtk</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/10/09/14、Matrix/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Idtk">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Idtk">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Matrix原理
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-10-09T00:00:00+08:00">
+                2016-10-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2016/10/09/14、Matrix/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
+<h2 id="一、Matrix结构"><a href="#一、Matrix结构" class="headerlink" title="一、Matrix结构"></a>一、Matrix结构</h2><p>在Android开发中，矩阵是一个非常强大且有趣的工具，在之前的一篇文章中对ColorMatrix的原理进行了详细的分析，用其实现了一些简单的颜色过滤功能，这一次我们来探寻一下同样强大的Matrix，它具有更改图像图形的有趣功能。我们先来看看Matrix的结构。</p>
+<a id="more"></a>
+<p><img src="http://latex.codecogs.com/png.latex?$$%20\left%20[%20\begin{matrix}%20MSCALE\\_X%20&amp;%20MSKEW\\_X%20&amp;%20MTRANS\\_X%20\\\\\\%20MSKEW\\_Y%20&amp;%20MSCALE\\_Y%20&amp;%20MTRANS\\_Y%20\\\\\\%20MPERSP\\_0%20&amp;%20MPERSP\\_1%20&amp;%20MPERSP\\_2%20\end{1}%20\right%20]%20$$" alt=""></p>
+<p>我们可以看到Matrix是一个3X3的矩阵。</p>
+<ul>
+<li>MSCALE_X、MSCALE_Y、MPERSP_2 分别表示X、Y、w(透视)的缩放</li>
+<li>MSKEW_X、MSKEW_Y 分别表示X、Y的错切</li>
+<li>MTRANS_X、MTRANS_Y 分别表示X、Y的平移</li>
+<li>MPERSP_0、MPERSP_1 分别表示X、Y方向上的透视</li>
+</ul>
+<h3 id="使用示例"><a href="#使用示例" class="headerlink" title="使用示例"></a>使用示例</h3><p>在Android的很多地方其实都使用到了Matrix的方法，比如图片、Canvas、动画等，我们这里以图片为例，像在<a href="https://github.com/Idtk/Blog/blob/master/Blog/2%E3%80%81CanvasAndValueAnimator.md" target="_blank" rel="external">Canvas与ValueAnimator</a>章节中一样，在<code>onDraw</code>函数中我们先绘制一个坐标系，然后来绘制一个矩形。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 平移画布</span></div><div class="line">canvas.translate(mWidth/<span class="number">2</span>,mHeight/<span class="number">2</span>);</div><div class="line">mPaint.setStrokeWidth(<span class="number">1</span>);<span class="comment">// 恢复画笔默认宽度</span></div><div class="line"><span class="comment">// 绘制X轴</span></div><div class="line">canvas.drawLine(-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span>,mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span>,mPaint);</div><div class="line"><span class="comment">// 绘制Y轴</span></div><div class="line">canvas.drawLine(<span class="number">0</span>,-mHeight/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>,mPaint);</div><div class="line">mPaint.setStrokeWidth(<span class="number">3</span>);</div><div class="line"><span class="comment">// 绘制X轴箭头</span></div><div class="line">canvas.drawLines(<span class="keyword">new</span> <span class="keyword">float</span>[]&#123;</div><div class="line">        mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span>,mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.95f</span>,-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,</div><div class="line">        mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span>,mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.95f</span>,mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span></div><div class="line">&#125;,mPaint);</div><div class="line"><span class="comment">// 绘制Y轴箭头</span></div><div class="line">canvas.drawLines(<span class="keyword">new</span> <span class="keyword">float</span>[]&#123;</div><div class="line">        <span class="number">0</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>,mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,</div><div class="line">        <span class="number">0</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>,-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,</div><div class="line">&#125;,mPaint);</div><div class="line"><span class="comment">// 创建矩阵</span></div><div class="line">mMatrix = <span class="keyword">new</span> Matrix();</div><div class="line"><span class="comment">/**</span></div><div class="line"> *  测试的Matrix操作</div><div class="line"> */</div><div class="line"></div><div class="line"><span class="comment">// 绘制图片</span></div><div class="line">canvas.drawBitmap(mBitmap,mMatrix,<span class="keyword">null</span>);</div></pre></td></tr></table></figure>
+<p><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/Matix0.png" alt="Matix" title="Matix"><br><br></p>
+<h2 id="二、Matrix原理"><a href="#二、Matrix原理" class="headerlink" title="二、Matrix原理"></a>二、Matrix原理</h2><h3 id="1、缩放变换"><a href="#1、缩放变换" class="headerlink" title="1、缩放变换"></a>1、缩放变换</h3><p>将点的X轴和y轴方向分别缩放<img src="http://latex.codecogs.com/png.latex?$$%20k_0%20$$" alt="">和<img src="http://latex.codecogs.com/png.latex?$$%20k_1%20$$" alt="">倍。x、y的计算结果为 : </p>
+<p><img src="http://latex.codecogs.com/png.latex?$$%20x%20=%20k_0\cdot%20x_0%20$$" alt=""><br><br><img src="http://latex.codecogs.com/png.latex?$$%20y%20=%20k_1\cdot%20y_0%20$$" alt=""><br></p>
+<p>用矩阵表示 : <br></p>
+<p><img src="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20x\\\y\\\1\end{1}%20\right%20]%20%20=%20\left%20[%20\begin{matrix}%20k_0%20&amp;%200%20&amp;%200%20\\\%200&amp;%20k_1%20&amp;%200%20\\\%200%20&amp;%200%20&amp;%201\end{1}%20\right%20]%20\left%20[%20\begin{matrix}%20x_0\\\y_0\\\1\end{1}%20\right%20]%20$$" alt=""></p>
+<p>效果如图所示 : <br><br><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/缩放.png" alt="缩放矩阵" title="缩放矩阵"><br><br></p>
+<h3 id="使用示例-1"><a href="#使用示例-1" class="headerlink" title="使用示例"></a>使用示例</h3><p>现在我们使用<code>Matrix</code>自带的<code>setScale</code>方法 :<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> *  测试的Matrix操作</div><div class="line"> */</div><div class="line">mMatrix.setScale(<span class="number">0.5f</span>,<span class="number">0.5f</span>);</div><div class="line"></div><div class="line">Log.d(<span class="string">"TAG"</span>,mMatrix.toString());</div><div class="line"></div><div class="line"><span class="comment">// Log</span></div><div class="line">D/TAG: Matrix&#123;[<span class="number">0.5</span>, <span class="number">0.0</span>, <span class="number">0.0</span>][<span class="number">0.0</span>, <span class="number">0.5</span>, <span class="number">0.0</span>][<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>]&#125;</div></pre></td></tr></table></figure></p>
+<p><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/Matix1.png" alt="Matix" title="Matix"><br><br></p>
+<h3 id="2、错切变换"><a href="#2、错切变换" class="headerlink" title="2、错切变换"></a>2、错切变换</h3><p>错切变换的效果就是让所有点的x坐标(或者y坐标)保持不变，而对于的y坐标(或者x坐标)则按照比例发生平移。<br></p>
+<h4 id="水平错切"><a href="#水平错切" class="headerlink" title="水平错切"></a>水平错切</h4><p>保持y不变，但其x坐标则按比例发生平移。x、y的计算结果为 :</p>
+<p><img src="http://latex.codecogs.com/png.latex?$$%20x%20=%20x_0%20+%20k\\cdot%20y_0%20$$" alt=""><br><br><img src="http://latex.codecogs.com/png.latex?$$%20y%20=%20y_0%20$$" alt=""><br></p>
+<p>用矩阵表示 : <br></p>
+<p><img src="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20x\\\y\\\1\end{1}%20\right%20]%20%20=%20\left%20[%20\begin{matrix}%201%20&amp;%20k%20&amp;%200%20\\\%200&amp;%201%20&amp;%200%20\\\%200%20&amp;%200%20&amp;%201\end{1}%20\right%20]%20\left%20[%20\begin{matrix}%20x_0\\\y_0\\\1\end{1}%20\right%20]%20$$" alt=""></p>
+<p>效果如图所示 : <br><br><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/水平错切.png" alt="水平错切" title="水平错切"><br><br></p>
+<h4 id="垂直错切"><a href="#垂直错切" class="headerlink" title="垂直错切"></a>垂直错切</h4><p>保持x不变，但其y坐标则按比例发生平移。x、y的计算结果为 :</p>
+<p><img src="http://latex.codecogs.com/png.latex?$$%20x%20=%20x_0%20$$" alt=""><br><br><img src="http://latex.codecogs.com/png.latex?$$%20y%20=%20y_0%20+%20k\cdot%20x_0%20$$" alt=""><br></p>
+<p>用矩阵表示 : <br></p>
+<p><img src="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20x\\\y\\\1\end{1}%20\right%20]%20%20=%20\left%20[%20\begin{matrix}%201%20&amp;%200%20&amp;%200%20\\\%20k&amp;%201%20&amp;%200%20\\\%200%20&amp;%200%20&amp;%201\end{1}%20\right%20]%20\left%20[%20\begin{matrix}%20x_0\\\y_0\\\1\end{1}%20\right%20]%20$$" alt=""></p>
+<p>效果如图所示 : <br><br><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/垂直错切.png" alt="垂直错切" title="垂直错切"><br><br></p>
+<p>当然你也可以同时进行水平错切和垂直错切的变换。</p>
+<h3 id="使用示例-2"><a href="#使用示例-2" class="headerlink" title="使用示例"></a>使用示例</h3><p>现在我们使用<code>Matrix</code>自带的<code>setSkew</code>方法 :<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> *  测试的Matrix操作</div><div class="line"> */</div><div class="line">mMatrix.setSkew(<span class="number">0f</span>,<span class="number">0.5f</span>);</div><div class="line">Log.d(<span class="string">"TAG"</span>,mMatrix.toString());</div><div class="line"></div><div class="line"><span class="comment">// Log</span></div><div class="line">D/TAG: Matrix&#123;[<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>][<span class="number">0.5</span>, <span class="number">1.0</span>, <span class="number">0.0</span>][<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>]&#125;</div></pre></td></tr></table></figure></p>
+<p><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/Matix2.png" alt="Matix" title="Matix"><br><br></p>
+<h3 id="3、平移变换"><a href="#3、平移变换" class="headerlink" title="3、平移变换"></a>3、平移变换</h3><p>假设有坐标为<img src="http://latex.codecogs.com/png.latex?$$%20x_0%20,%20y_0%20$$" alt="">，将其点进行平移，移动到点<img src="http://latex.codecogs.com/png.latex?$$%20x%20,%20y%20$$" alt="">，其x、y计算结果为 : <br></p>
+<p><img src="http://latex.codecogs.com/png.latex?$$%20x%20=%20x_0%20+%20\Delta%20x%20$$" alt=""><br><br><img src="http://latex.codecogs.com/png.latex?$$%20y%20=%20y_0%20+%20\Delta%20y%20$$" alt=""><br></p>
+<p>用矩阵表示 : <br></p>
+<p><img src="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20x\\\y\\\1\end{1}%20\right%20]%20%20=%20\left%20[%20\begin{matrix}%201%20&amp;%200%20&amp;%20\Delta%20x%20\\\%200&amp;%201%20&amp;%20\Delta%20y%20\\\%200%20&amp;%200%20&amp;%201\end{1}%20\right%20]%20\left%20[%20\begin{matrix}%20x_0\\\y_0\\\1\end{1}%20\right%20]%20$$" alt=""></p>
+<p>效果如图所示 : <br><br><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/平移.png" alt="平移" title="平移"><br><br></p>
+<h3 id="使用示例-3"><a href="#使用示例-3" class="headerlink" title="使用示例"></a>使用示例</h3><p>现在我们使用<code>Matrix</code>自带的<code>setTranslate</code>方法 :<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> *  测试的Matrix操作</div><div class="line"> */</div><div class="line">mMatrix.setTranslate(-<span class="number">200</span>,-<span class="number">200</span>);</div><div class="line">Log.d(<span class="string">"TAG"</span>,mMatrix.toString());</div><div class="line"></div><div class="line"><span class="comment">// Log</span></div><div class="line">D/TAG: Matrix&#123;[<span class="number">1.0</span>, <span class="number">0.0</span>, -<span class="number">200.0</span>][<span class="number">0.0</span>, <span class="number">1.0</span>, -<span class="number">200.0</span>][<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>]&#125;</div></pre></td></tr></table></figure></p>
+<p><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/Matix3.png" alt="Matix" title="Matix"><br><br></p>
+<h3 id="4、旋转变换"><a href="#4、旋转变换" class="headerlink" title="4、旋转变换"></a>4、旋转变换</h3><p>假设有一点坐标为<img src="http://latex.codecogs.com/png.latex?$$%20x_0,y_0%20$$" alt="">，距离原点为r，与x轴方向的夹角为α，绕原点旋转θ后，变换为点<img src="http://latex.codecogs.com/png.latex?$$%20x,y%20$$" alt="">，其变换前后各点计算结果为 : <br></p>
+<p><img src="http://latex.codecogs.com/png.latex?$$%20x_0%20=%20r\cdot\cos%20\alpha%20$$" alt=""><br><br><img src="http://latex.codecogs.com/png.latex?$$%20y_0%20=%20r\cdot\sin%20\alpha%20$$" alt=""><br><br><img src="http://latex.codecogs.com/png.latex?$$%20x%20=%20r%20\cdot\cos%20\left(%20\alpha%20+%20\theta\right%20" alt="">%20=%20r%20\cdot\cos\alpha\cos\theta%20-%20r%20\cdot\sin\alpha\sin\theta%20=%20x_0\cos\theta%20-%20y_0\sin\theta$$)<br><br><img src="http://latex.codecogs.com/png.latex?$$%20y%20=%20r%20\cdot%20\sin%20\left(%20\alpha%20+%20\theta\right%20" alt="">%20=%20r%20\cdot\sin\alpha\cos\theta%20+%20r%20\cdot\cos\alpha\sin\theta%20=%20y_0\cos\theta%20+%20x_0\sin\theta$$)<br></p>
+<p>用矩阵表示为 : <br></p>
+<p><img src="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20x\\\y\\\1\end{1}%20\right%20]%20%20=%20\left%20[%20\begin{matrix}%20\cos\theta%20&amp;%20-\sin\theta%20&amp;%200%20\\\%20\sin\theta&amp;%20\cos\theta%20&amp;%200%20\\\%200%20&amp;%200%20&amp;%201\end{1}%20\right%20]%20\left%20[%20\begin{matrix}%20x_0\\\y_0\\\1\end{1}%20\right%20]%20$$" alt=""></p>
+<p>效果如图所示 : <br><br><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/旋转.png" alt="旋转" title="旋转"><br><br></p>
+<h3 id="使用示例-4"><a href="#使用示例-4" class="headerlink" title="使用示例"></a>使用示例</h3><p>现在我们使用<code>Matrix</code>自带的<code>setRotate</code>方法 :<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> *  测试的Matrix操作</div><div class="line"> */</div><div class="line">mMatrix.setRotate(<span class="number">180</span>);</div><div class="line">Log.d(<span class="string">"TAG"</span>,mMatrix.toString());</div><div class="line"></div><div class="line"><span class="comment">// Log</span></div><div class="line">D/TAG: Matrix&#123;[-<span class="number">1.0</span>, -<span class="number">0.0</span>, <span class="number">0.0</span>][<span class="number">0.0</span>, -<span class="number">1.0</span>, <span class="number">0.0</span>][<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>]&#125;</div></pre></td></tr></table></figure></p>
+<p><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/Matix4.png" alt="Matix" title="Matix"><br><br></p>
+<h3 id="5、透视变换"><a href="#5、透视变换" class="headerlink" title="5、透视变换"></a>5、透视变换</h3><p>我们在之前的变换中，一直没有说到最后一行的三个参数<code>MPERSP_0、MPERSP_1、MPERSP_2</code>，这里我们来稍微聊聊这三个参数所表示的透视。我们一般在图像中的一个点将使用如下方式进行表示(x, y, w),而Android中的二维矩阵计算是基于齐次坐标的，齐次坐标要求w的值为1，所以这个点的表示方法就变化为(x/w, y/w, 1)。<br><br>透视变换的效果其实类似于投影机的方式，我们看下w=3时，坐标(15,21,3)的效果 : <br><br><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/透视1.png" alt="透视" title="透视"><br><br></p>
+<p><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/透视3.png" alt="透视" title="透视"><br><br></p>
+<p><br><br>现在看下(15,21,3)计算出的齐次坐标系坐标(5,7,1)的效果 : <br></p>
+<p><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/透视2.png" alt="透视" title="透视"><br><br></p>
+<p>根据这个规则，也就解释了我们在使用过程中修改<code>MPERSP_2</code>参数时，图像会发生的类似缩放的效果，其实就是透视变换的效果。<br></p>
+<h3 id="使用示例-5"><a href="#使用示例-5" class="headerlink" title="使用示例"></a>使用示例</h3><p>现在我们使用<code>Matrix</code>自带的<code>setValues</code>方法 :<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> *  测试的Matrix操作</div><div class="line"> */</div><div class="line">mMatrix.setValues(<span class="keyword">new</span> <span class="keyword">float</span>[]&#123;<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1.5f</span>&#125;);</div><div class="line">Log.d(<span class="string">"TAG"</span>,mMatrix.toString());</div><div class="line"></div><div class="line"><span class="comment">// Log</span></div><div class="line">D/TAG: Matrix&#123;[<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>][<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>][<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.5</span>]&#125;</div></pre></td></tr></table></figure></p>
+<p><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/Matix5.png" alt="Matix" title="Matix"><br><br></p>
+<h2 id="三、Matrix前乘与后乘"><a href="#三、Matrix前乘与后乘" class="headerlink" title="三、Matrix前乘与后乘"></a>三、Matrix前乘与后乘</h2><p>Matrix前乘与后乘的情况跟我在之前的文章<a href="http://www.idtkm.com/customview/cutomview13/" target="_blank" rel="external">ColorMatrix详解</a>中<strong>ColorMatrix相乘</strong>章节所描述的基本相同。<br></p>
+<h3 id="前乘"><a href="#前乘" class="headerlink" title="前乘"></a>前乘</h3><p>前乘相当于，当前矩阵乘以输入的矩阵<img src="http://latex.codecogs.com/png.latex?$$%20M&#39;%20=%20M%20\cdot%20S%20$$" alt=""><br></p>
+<p>示例如下:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mMatrix.reset();</div><div class="line">mMatrix.preScale(sx,sy);</div><div class="line">mMatrix.preTranslate(tx,ty);</div></pre></td></tr></table></figure>
+<p>用矩阵表示为 : </p>
+<p><img src="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20&amp;%20&amp;\\\%20&amp;%20Result%20&amp;%20Matrix%20&amp;\\\%20&amp;%20&amp;%20\end{1}%20\right%20]%20=%20\left%20[%20\begin{matrix}%20&amp;%20&amp;\\\%20&amp;%20Initial%20&amp;%20Matrix%20&amp;\\\%20&amp;%20&amp;%20\end{1}%20\right%20]%20%20\left%20[%20\begin{matrix}%20sx%20&amp;%200%20&amp;%200%20\\\%200&amp;%20sy%20&amp;%200%20\\\%200%20&amp;%200%20&amp;%201\end{1}%20\right%20]%20%20\left%20[%20\begin{matrix}%201%20&amp;%200%20&amp;%20tx%20\\\%200&amp;%201%20&amp;%20ty%20\\\%200%20&amp;%200%20&amp;%201\end{1}%20\right%20]%20$$" alt=""></p>
+<h3 id="后乘"><a href="#后乘" class="headerlink" title="后乘"></a>后乘</h3><p>后乘相当于，输入的矩阵乘以当前矩阵<img src="http://latex.codecogs.com/png.latex?$$%20M&#39;%20=%20S%20\cdot%20M%20$$" alt=""><br></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mMatrix.reset();</div><div class="line">mMatrix.postScale(sx,sy);</div><div class="line">mMatrix.postTranslate(tx,ty);</div></pre></td></tr></table></figure>
+<p><img src="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20&amp;%20&amp;\\\%20&amp;%20Result%20&amp;%20Matrix%20&amp;\\\%20&amp;%20&amp;%20\end{1}%20\right%20]%20=%20\left%20[%20\begin{matrix}%201%20&amp;%200%20&amp;%20tx%20\\\%200&amp;%201%20&amp;%20ty%20\\\%200%20&amp;%200%20&amp;%201\end{1}%20\right%20]%20%20\left%20[%20\begin{matrix}%20sx%20&amp;%200%20&amp;%200%20\\\%200&amp;%20sy%20&amp;%200%20\\\%200%20&amp;%200%20&amp;%201\end{1}%20\right%20]%20\left%20[%20\begin{matrix}%20&amp;%20&amp;\\\%20&amp;%20Initial%20&amp;%20Matrix%20&amp;\\\%20&amp;%20&amp;%20\end{1}%20\right%20]%20%20$$" alt=""></p>
+<h2 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h2><p>本文深入分析了Matrix的原理，并讲解了其常用方法和前后乘的方法。如果在阅读过程中，有任何疑问与问题，欢迎与我联系。<br><br><strong>博客:www.idtkm.com</strong><br><br><strong>GitHub:<a href="https://github.com/Idtk" target="_blank" rel="external">https://github.com/Idtk</a></strong><br><br><strong>微博:<a href="http://weibo.com/Idtk" target="_blank" rel="external">http://weibo.com/Idtk</a></strong><br><br><strong>邮箱:IdtkMa@gmail.com</strong><br><br><br></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://developer.android.com/reference/android/graphics/Matrix.html" target="_blank" rel="external">Matrix</a><br><br><a href="http://www.cnblogs.com/qiengo/archive/2012/06/30/2570874.html#code" target="_blank" rel="external">Android Matrix</a><br><br><a href="http://blog.csdn.net/linmiansheng/article/details/18820599" target="_blank" rel="external">Android中关于矩阵（Matrix）前乘后乘的一些认识</a><br><br><a href="https://oncemore2020.github.io/blog/homogeneous/" target="_blank" rel="external">齐次坐标系入门级思考</a><br><br><a href="http://www.jianshu.com/p/7e701d7bfd79" target="_blank" rel="external">次坐标和投影</a><br><br><a href="https://zh.wikipedia.org/wiki/%E5%8F%98%E6%8D%A2%E7%9F%A9%E9%98%B5" target="_blank" rel="external">变换矩阵</a><br></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CustomView/" rel="tag"># CustomView</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/09/18/13、ColorMatrix/" rel="next" title="ColorMatrix详解">
+                <i class="fa fa-chevron-left"></i> ColorMatrix详解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/11/10/F1、Property Animation/" rel="prev" title="属性动画连续输出值分析">
+                属性动画连续输出值分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/header.jpg"
+               alt="Idtk" />
+          <p class="site-author-name" itemprop="name">Idtk</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Idtk" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/Idtk" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="mailto:IdtkMa@gmail.com" target="_blank" title="Email">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                  Email
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、Matrix结构"><span class="nav-number">1.</span> <span class="nav-text">一、Matrix结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用示例"><span class="nav-number">1.1.</span> <span class="nav-text">使用示例</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、Matrix原理"><span class="nav-number">2.</span> <span class="nav-text">二、Matrix原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、缩放变换"><span class="nav-number">2.1.</span> <span class="nav-text">1、缩放变换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用示例-1"><span class="nav-number">2.2.</span> <span class="nav-text">使用示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、错切变换"><span class="nav-number">2.3.</span> <span class="nav-text">2、错切变换</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#水平错切"><span class="nav-number">2.3.1.</span> <span class="nav-text">水平错切</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#垂直错切"><span class="nav-number">2.3.2.</span> <span class="nav-text">垂直错切</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用示例-2"><span class="nav-number">2.4.</span> <span class="nav-text">使用示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3、平移变换"><span class="nav-number">2.5.</span> <span class="nav-text">3、平移变换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用示例-3"><span class="nav-number">2.6.</span> <span class="nav-text">使用示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4、旋转变换"><span class="nav-number">2.7.</span> <span class="nav-text">4、旋转变换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用示例-4"><span class="nav-number">2.8.</span> <span class="nav-text">使用示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5、透视变换"><span class="nav-number">2.9.</span> <span class="nav-text">5、透视变换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用示例-5"><span class="nav-number">2.10.</span> <span class="nav-text">使用示例</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、Matrix前乘与后乘"><span class="nav-number">3.</span> <span class="nav-text">三、Matrix前乘与后乘</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#前乘"><span class="nav-number">3.1.</span> <span class="nav-text">前乘</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#后乘"><span class="nav-number">3.2.</span> <span class="nav-text">后乘</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、总结"><span class="nav-number">4.</span> <span class="nav-text">四、总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Idtk</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "a727d901f6db4dd0a57496c675fe7c96",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+
+  
+
+</body>
+</html>

@@ -1,0 +1,851 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="OkHttp,Retrofit," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Idtk" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="前段时间在给公司的新app做一些基础模块的封装，把Http模块中的一些基础配置，比如设置链接超时、Http Log Interceptor、Access Token Interceptor、Status Code Interceptor，以及Json转换、RxJava适配等设置做一下分享，再简单说说OkHttp Interceptor原理。
+基本配置OkHttp配置OkHttp主要采用Builde">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Retrofit2 + OkHttp3 配置及Interceptor原理">
+<meta property="og:url" content="http://www.idtkm.com/2017/10/26/Retrofit2 & OkHttp3 Interceptor/index.html">
+<meta property="og:site_name" content="Idtk">
+<meta property="og:description" content="前段时间在给公司的新app做一些基础模块的封装，把Http模块中的一些基础配置，比如设置链接超时、Http Log Interceptor、Access Token Interceptor、Status Code Interceptor，以及Json转换、RxJava适配等设置做一下分享，再简单说说OkHttp Interceptor原理。
+基本配置OkHttp配置OkHttp主要采用Builde">
+<meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/Retrofit2%20+%20OkHttp3%20Interceptor.png">
+<meta property="og:updated_time" content="2017-10-26T15:23:00.342Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Retrofit2 + OkHttp3 配置及Interceptor原理">
+<meta name="twitter:description" content="前段时间在给公司的新app做一些基础模块的封装，把Http模块中的一些基础配置，比如设置链接超时、Http Log Interceptor、Access Token Interceptor、Status Code Interceptor，以及Json转换、RxJava适配等设置做一下分享，再简单说说OkHttp Interceptor原理。
+基本配置OkHttp配置OkHttp主要采用Builde">
+<meta name="twitter:image" content="http://ompb0h8qq.bkt.clouddn.com/Retrofit2%20+%20OkHttp3%20Interceptor.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.idtkm.com/2017/10/26/Retrofit2 & OkHttp3 Interceptor/"/>
+
+
+
+
+
+  <title> Retrofit2 + OkHttp3 配置及Interceptor原理 | Idtk </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  <div style="display: none;">
+    <script src="//s11.cnzz.com/z_stat.php?id=1261484069&web_id=1261484069" language="JavaScript"></script>
+  </div>
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Idtk</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2017/10/26/Retrofit2 & OkHttp3 Interceptor/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Idtk">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Idtk">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Retrofit2 + OkHttp3 配置及Interceptor原理
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-26T23:00:00+08:00">
+                2017-10-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/10/26/Retrofit2 & OkHttp3 Interceptor/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/10/26/Retrofit2 & OkHttp3 Interceptor/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>前段时间在给公司的新app做一些基础模块的封装，把Http模块中的一些基础配置，比如设置链接超时、Http Log Interceptor、Access Token Interceptor、Status Code Interceptor，以及Json转换、RxJava适配等设置做一下分享，再简单说说OkHttp Interceptor原理。</p>
+<h2 id="基本配置"><a href="#基本配置" class="headerlink" title="基本配置"></a>基本配置</h2><h3 id="OkHttp配置"><a href="#OkHttp配置" class="headerlink" title="OkHttp配置"></a>OkHttp配置</h3><p>OkHttp主要采用Builder模式进行配置</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">HttpLoggingInterceptor.Logger CUSTOM = <span class="keyword">new</span> HttpLoggingInterceptor.Logger() &#123;</div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">log</span><span class="params">(String message)</span> </span>&#123;</div><div class="line">        Platform.get().log(INFO, <span class="string">"OkHttp-idtk： "</span> + message, <span class="keyword">null</span>);</div><div class="line">    &#125;</div><div class="line">&#125;;</div><div class="line">HttpLoggingInterceptor loggingInterceptor = <span class="keyword">new</span> HttpLoggingInterceptor(CUSTOM);</div><div class="line">loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);</div><div class="line">OkHttpClient client = <span class="keyword">new</span> OkHttpClient.Builder()</div><div class="line">        .readTimeout(<span class="number">5</span>, TimeUnit.SECONDS)</div><div class="line">        .writeTimeout(<span class="number">5</span>, TimeUnit.SECONDS)</div><div class="line">        .connectTimeout(<span class="number">15</span>, TimeUnit.SECONDS)</div><div class="line">        .retryOnConnectionFailure(<span class="keyword">true</span>)</div><div class="line">        .addInterceptor(statusInterceptor)</div><div class="line">        .addInterceptor(loggingInterceptor)</div><div class="line">        .addNetworkInterceptor(tokenInterceptor)</div><div class="line">        .build();</div></pre></td></tr></table></figure>
+<ul>
+<li>retryOnConnectionFailure设置为true，表示请求失败后将会重连。</li>
+<li>HttpLoggingInterceptor用于拦截网络请求和响应，并输出Log，我在输出log的标识方面稍微修改了一下，便于使用时的区别。等级分为NONE/BASIC/HEADERS/BODY，其中BODY打印出的最为详细。</li>
+<li>addInterceptor与addNetworkInterceptor都是增加OkHttp的网络请求拦截器，但是其中是有一定区别的，前者是添加在与服务器连接之前和之后，后者是添加在与服务器建立连接和发起请求的之间。</li>
+<li>tokenInterceptor 是用来设置的token的拦截器，用于网络请求token的统一添加，具体内容会在接下来说明。</li>
+<li>statusInterceptor 用于响应返回状态码的处理，比如token过期、注册码无效等状态的处理。</li>
+</ul>
+<a id="more"></a>
+<h4 id="token拦截器"><a href="#token拦截器" class="headerlink" title="token拦截器"></a>token拦截器</h4><p>让所有网络请求都添加上token</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> Response <span class="title">intercept</span><span class="params">(Chain chain)</span> <span class="keyword">throws</span> IOException </span>&#123;</div><div class="line">    Request request = chain.request();</div><div class="line">    String url = request.url().toString();</div><div class="line">    <span class="keyword">if</span> (NetConfig.needAddToken(request)) &#123;</div><div class="line">        Uri uri = Uri.parse(url);</div><div class="line">        Set&lt;String&gt; oldParam = uri.getQueryParameterNames();</div><div class="line">        <span class="keyword">if</span> (!oldParam.contains(<span class="string">"token"</span>))&#123;</div><div class="line">            String token = getToken();</div><div class="line">            <span class="keyword">if</span> (oldParam.size() &gt;<span class="number">0</span>)&#123;</div><div class="line">                url += <span class="string">"&amp;token="</span> + token;</div><div class="line">            &#125;<span class="keyword">else</span> &#123;</div><div class="line">                url += <span class="string">"?token="</span> +token;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        request = request.newBuilder().url(url).build();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> chain.proceed(request);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>对于登录请求等情况，是不需要添加token的，所以在needAddToken方法中进行了判断。</li>
+<li>我这里后台的要求是把token放在url中，所以我进行了如上的写法，你也可以根据自己的需求进行修改。</li>
+</ul>
+<h4 id="状态码拦截"><a href="#状态码拦截" class="headerlink" title="状态码拦截"></a>状态码拦截</h4><p>对于后台定义的各种状态码进行处理</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> Response <span class="title">intercept</span><span class="params">(Chain chain)</span> <span class="keyword">throws</span> IOException </span>&#123;</div><div class="line">    Request request = chain.request();</div><div class="line">    Response response = chain.proceed(request);</div><div class="line">    BaseResult data = <span class="keyword">new</span> Gson().fromJson(response.body().string(), BaseResult.class);</div><div class="line">    <span class="keyword">if</span> (data == <span class="keyword">null</span>) &#123;</div><div class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"返回数据结构不合法： "</span> + response.body().string());</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">int</span> status = data.status;</div><div class="line">    <span class="keyword">switch</span> (status)&#123;</div><div class="line">        <span class="keyword">case</span> NetConfig.TOKEN:</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> TokenException(data.msg);</div><div class="line">        <span class="keyword">case</span> NetConfig.REGISTER_CODE:</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RegisterException(data.msg);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> response;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BaseResult</span> </span>&#123;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">int</span> status;</div><div class="line">    <span class="keyword">public</span> String msg;</div><div class="line">    <span class="keyword">public</span> JsonElement data;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>BaseResult是根据与后台的协定设置的，这里首先对data是否为null进行了检测。</li>
+<li>在获取状态码之后，对其进行token失效和注册码失效的检测，这里处理抛出异常，之后可以在使用时的基类进行统一处理。当然你也可以使用接口等别的方式进行处理。</li>
+</ul>
+<h3 id="Retrofit配置"><a href="#Retrofit配置" class="headerlink" title="Retrofit配置"></a>Retrofit配置</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">retrofit = <span class="keyword">new</span> Retrofit.Builder()</div><div class="line">        .client(buildClient())</div><div class="line">        .addConverterFactory(GsonConverterFactory.create())</div><div class="line">        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())</div><div class="line">        .baseUrl(baseUrl)</div><div class="line">        .build();</div></pre></td></tr></table></figure>
+<ul>
+<li>addConverterFactory  添加Gson转换器</li>
+<li>addCallAdapterFactory  添加Rxjava2适配器</li>
+</ul>
+<h2 id="拦截器原理"><a href="#拦截器原理" class="headerlink" title="拦截器原理"></a>拦截器原理</h2><p>因为之前写过<a href="http://www.idtkm.com/2017/04/27/Retrofit/">文章</a>分析，所以这里便不再赘述，而对于OkHttp，现在来简单说说其拦截器原理。</p>
+<p>OkHttp的使用我想大家都知道，在调用<code>client.newCall(request)</code>将会调用到<code>RealCall.newRealCall(this, request, false);</code>方法，之后将会调用到<code>RealCall.getResponseWithInterceptorChain()</code>函数，而在其中将进行拦截器链的构建。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="function">Response <span class="title">getResponseWithInterceptorChain</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</div><div class="line">  <span class="comment">// Build a full stack of interceptors.</span></div><div class="line">  List&lt;Interceptor&gt; interceptors = <span class="keyword">new</span> ArrayList&lt;&gt;();</div><div class="line">  <span class="comment">// client中配置的interceptors</span></div><div class="line">  interceptors.addAll(client.interceptors());</div><div class="line">  <span class="comment">// 重定向与失败重试</span></div><div class="line">  interceptors.add(retryAndFollowUpInterceptor);</div><div class="line">  <span class="comment">// 用户的请求头处理，响应处理</span></div><div class="line">  <span class="comment">// (Cookie持久性策略)</span></div><div class="line">  interceptors.add(<span class="keyword">new</span> BridgeInterceptor(client.cookieJar()));</div><div class="line">  <span class="comment">// 缓存请求、响应缓存的写入 (客户端设置的缓存策略)</span></div><div class="line">  interceptors.add(<span class="keyword">new</span> CacheInterceptor(client.internalCache()));</div><div class="line">  <span class="comment">// 与服务器建立连接</span></div><div class="line">  interceptors.add(<span class="keyword">new</span> ConnectInterceptor(client));</div><div class="line">  <span class="keyword">if</span> (!forWebSocket) &#123;</div><div class="line">    <span class="comment">// client配置的networkInterceptors，用于观察请求和响应</span></div><div class="line">    interceptors.addAll(client.networkInterceptors());</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 发送请求，读取服务器的响应</span></div><div class="line">  interceptors.add(<span class="keyword">new</span> CallServerInterceptor(forWebSocket));</div><div class="line">  <span class="comment">// 设置完整的OkHttp拦截链</span></div><div class="line">  Interceptor.Chain chain = <span class="keyword">new</span> RealInterceptorChain(</div><div class="line">      interceptors, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="number">0</span>, originalRequest);</div><div class="line">  <span class="comment">// 调用链中的下一个拦截器，在这里是开始调用第一个拦截器</span></div><div class="line">  <span class="keyword">return</span> chain.proceed(originalRequest);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看出拦截器列表是从interceptors开始添加的，也就是之前说的HttpLoggingInterceptor、StatusInterceptor，之后添加重定向、cookie、缓存、连接建立的拦截器，然后添加上networkInterceptors，也就是我们之前说的TokenInterceptor，最后通过RealInterceptorChain调用proceed接口启动拦截器。</p>
+<p>如果你查看上面各个拦截器的源码，包括我上面自定义的三个拦截器，你会发现其中几乎都使用了<code>chain.proceed</code>方法来生成response，当然CallServerInterceptor其中并没有这个方法，因为它是真正使用去进行请求的拦截器。根据这些我们就可以绘制出一个事件流在拦截其中的过程：</p>
+<p><img src="http://ompb0h8qq.bkt.clouddn.com/Retrofit2%20+%20OkHttp3%20Interceptor.png" alt="Interceptor" title="Interceptor"></p>
+<p>我们可以在<code>CallServerInterceptor</code>之前对request的header、url等参数进行检测和配置，比如我们自定义的TokenInterceptor，在<code>CallServerInterceptor</code>之后我们可以对response的code、body等进行检测和配置，比如我们之前定义的StatusInterceptor,而HttpLoggingInterceptor则是对request和response都进行检测和配置。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>当然Retrofit+OkHttp还有更多的属性配置，比如证书、Cookie等，但这些属性在网络请求中的实现都是在OkHttp Interceptor中进行的，感兴趣的同学建议阅读下源码。</p>
+<p>如果在阅读过程中，有任何疑问与问题，欢迎与我联系。<br><strong>博客:www.idtkm.com</strong><br><strong>GitHub:<a href="https://github.com/Idtk" target="_blank" rel="external">https://github.com/Idtk</a></strong><br><strong>微博:<a href="http://weibo.com/Idtk" target="_blank" rel="external">http://weibo.com/Idtk</a></strong><br><strong>邮箱:IdtkMa@gmail.com</strong></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div class="my_post_copyright">
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+  <!-- JS库 sweetalert 可修改路径 -->
+  <script type="text/javascript" src="http://jslibs.wuxubj.cn/sweetalert_mini/jquery-1.7.1.min.js"></script>
+  <script src="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.mini.css">
+  <p><span>文章作者:</span><a href="/" title="访问 Idtk 的个人博客">Idtk</a></p>
+  <p><span>本文标题:</span><a href="/2017/10/26/Retrofit2 & OkHttp3 Interceptor/">Retrofit2 + OkHttp3 配置及Interceptor原理</a></p>
+  <!-- http://www.idtkm.com/2017/10/26/Retrofit2 & OkHttp3 Interceptor/ -->
+  <p><span>原始链接:</span><a href="/2017/10/26/Retrofit2 & OkHttp3 Interceptor/" title="Retrofit2 + OkHttp3 配置及Interceptor原理">http://www.idtkm.com/2017/10/26/Retrofit2 & OkHttp3 Interceptor/</a></p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/07/09/Surprise Kotlin/" rel="next" title="令人惊喜的Kotlin特性">
+                <i class="fa fa-chevron-left"></i> 令人惊喜的Kotlin特性
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/header.jpg"
+               alt="Idtk" />
+          <p class="site-author-name" itemprop="name">Idtk</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Idtk" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/Idtk" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="mailto:IdtkMa@gmail.com" target="_blank" title="Email">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                  Email
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本配置"><span class="nav-number">1.</span> <span class="nav-text">基本配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#OkHttp配置"><span class="nav-number">1.1.</span> <span class="nav-text">OkHttp配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#token拦截器"><span class="nav-number">1.1.1.</span> <span class="nav-text">token拦截器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#状态码拦截"><span class="nav-number">1.1.2.</span> <span class="nav-text">状态码拦截</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Retrofit配置"><span class="nav-number">1.2.</span> <span class="nav-text">Retrofit配置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#拦截器原理"><span class="nav-number">2.</span> <span class="nav-text">拦截器原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">3.</span> <span class="nav-text">小结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Idtk</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+
+
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'idtk';
+      var disqus_identifier = '2017/10/26/Retrofit2 & OkHttp3 Interceptor/';
+
+      var disqus_title = "Retrofit2 + OkHttp3 配置及Interceptor原理";
+
+
+      function run_disqus_script(disqus_script) {
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+
+      
+        var disqus_config = function () {
+            this.page.url = disqus_url;
+            this.page.identifier = disqus_identifier;
+            this.page.title = disqus_title;
+        };
+        run_disqus_script('embed.js');
+      
+
+    </script>
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+
+  
+
+</body>
+</html>

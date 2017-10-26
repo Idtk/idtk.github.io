@@ -131,7 +131,7 @@ invalidate
 调用on">
 <meta property="og:type" content="article">
 <meta property="og:title" content="View多行文本居中">
-<meta property="og:url" content="http://yoursite.com/2016/05/21/3、Multi-lineTextCenter/index.html">
+<meta property="og:url" content="http://www.idtkm.com/2016/05/21/3、Multi-lineTextCenter/index.html">
 <meta property="og:site_name" content="Idtk">
 <meta property="og:description" content="自定义View系列目录
 涉及知识绘制过程
@@ -185,7 +185,7 @@ invalidate
 <meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/Multi-line.png">
 <meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/row.png">
 <meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/Multi-line2.png">
-<meta property="og:updated_time" content="2017-03-12T13:01:19.627Z">
+<meta property="og:updated_time" content="2017-10-15T16:02:24.491Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="View多行文本居中">
 <meta name="twitter:description" content="自定义View系列目录
@@ -256,7 +256,7 @@ invalidate
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/05/21/3、Multi-lineTextCenter/"/>
+  <link rel="canonical" href="http://www.idtkm.com/2016/05/21/3、Multi-lineTextCenter/"/>
 
 
 
@@ -397,7 +397,7 @@ invalidate
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/05/21/3、Multi-lineTextCenter/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2016/05/21/3、Multi-lineTextCenter/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -642,7 +642,7 @@ invalidate
 </table>
 <p><br></p>
 <p>（<strong>PS: 因API较多，只列出了涉及的方法，想了解更多，请查看<a href="http://developer.android.com/reference/packages.html" target="_blank" rel="external">官方文档</a></strong>)<br></p>
-<h2 id="一、绘制文本"><a href="#一、绘制文本" class="headerlink" title="一、绘制文本"></a>一、绘制文本</h2><p>在Canvas中绘制文本，使用在<a href="http://www.idtkm.com/customview/customview2/" target="_blank" rel="external">上一篇</a>绘制的坐标系</p>
+<h2 id="一、绘制文本"><a href="#一、绘制文本" class="headerlink" title="一、绘制文本"></a>一、绘制文本</h2><p>在Canvas中绘制文本，使用在<a href="http://www.idtkm.com/customview/customview2/">上一篇</a>绘制的坐标系</p>
 <h3 id="1、drawText"><a href="#1、drawText" class="headerlink" title="1、drawText"></a>1、drawText</h3><p>drawText的几种方法如下:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">drawText</span> <span class="params">(String text, <span class="keyword">float</span> x, <span class="keyword">float</span> y, Paint paint)</span></span></div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">drawText</span> <span class="params">(String text, <span class="keyword">int</span> start, <span class="keyword">int</span> end, <span class="keyword">float</span> x, <span class="keyword">float</span> y, Paint paint)</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">drawText</span> <span class="params">(CharSequence text, <span class="keyword">int</span> start, <span class="keyword">int</span> end, <span class="keyword">float</span> x, <span class="keyword">float</span> y, Paint paint)</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">drawText</span> <span class="params">(<span class="keyword">char</span>[] text, <span class="keyword">int</span> index, <span class="keyword">int</span> count, <span class="keyword">float</span> x, <span class="keyword">float</span> y, Paint paint)</span></div></pre></td></tr></table></figure></p>
 <p>x、y值表示绘制文本左下角的坐标<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">Paint mPaint = <span class="keyword">new</span> Paint();</div><div class="line">mPaint.setAntiAlias(<span class="keyword">true</span>);<span class="comment">//抗锯齿</span></div><div class="line">mPaint.setColor(Color.BLUE);<span class="comment">//设置画笔颜色</span></div><div class="line">mPaint.setTextSize(<span class="number">50</span>);</div><div class="line">String string = <span class="string">"Idtk"</span>;</div><div class="line">canvas.drawText(string,<span class="number">0</span>,<span class="number">0</span>,mPaint);</div></pre></td></tr></table></figure></p>
 <p><img src="http://ompb0h8qq.bkt.clouddn.com/old/drawText1.png" alt="drawText1" title="drawText1" width="300"><br><br><br>或者只绘制其中的一部分字符<br><br>start表示从第几个字符开始，end表示到第几个字符之前结束</p>
@@ -706,6 +706,27 @@ invalidate
     <div>
       
         
+<div class="my_post_copyright">
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+  <!-- JS库 sweetalert 可修改路径 -->
+  <script type="text/javascript" src="http://jslibs.wuxubj.cn/sweetalert_mini/jquery-1.7.1.min.js"></script>
+  <script src="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.mini.css">
+  <p><span>文章作者:</span><a href="/" title="访问 Idtk 的个人博客">Idtk</a></p>
+  <p><span>本文标题:</span><a href="/2016/05/21/3、Multi-lineTextCenter/">View多行文本居中</a></p>
+  <!-- http://www.idtkm.com/2016/05/21/3、Multi-lineTextCenter/ -->
+  <p><span>原始链接:</span><a href="/2016/05/21/3、Multi-lineTextCenter/" title="View多行文本居中">http://www.idtkm.com/2016/05/21/3、Multi-lineTextCenter/</a></p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
 
       
     </div>
@@ -719,13 +740,6 @@ invalidate
 
 
     <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/CustomView/" rel="tag"># CustomView</a>
-          
-        </div>
-      
 
       
         
@@ -826,7 +840,7 @@ invalidate
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-count">21</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -844,7 +858,7 @@ invalidate
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -956,6 +970,11 @@ invalidate
     NexT.Mist
   </a>
 </div>
+
+
+
+
+
 
 
         

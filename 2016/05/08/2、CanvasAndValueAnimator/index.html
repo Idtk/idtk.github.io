@@ -131,7 +131,7 @@ invalidate
 调用on">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Canvas与ValueAnimator">
-<meta property="og:url" content="http://yoursite.com/2016/05/08/2、CanvasAndValueAnimator/index.html">
+<meta property="og:url" content="http://www.idtkm.com/2016/05/08/2、CanvasAndValueAnimator/index.html">
 <meta property="og:site_name" content="Idtk">
 <meta property="og:description" content="自定义View系列目录
 涉及知识绘制过程
@@ -186,7 +186,7 @@ invalidate
 <meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E7%AC%91%E8%84%B8.png">
 <meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9C%86%E5%BC%A7.png">
 <meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E7%AC%91%E8%84%B8.gif">
-<meta property="og:updated_time" content="2017-03-12T13:01:14.476Z">
+<meta property="og:updated_time" content="2017-10-15T16:02:30.576Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Canvas与ValueAnimator">
 <meta name="twitter:description" content="自定义View系列目录
@@ -257,7 +257,7 @@ invalidate
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/05/08/2、CanvasAndValueAnimator/"/>
+  <link rel="canonical" href="http://www.idtkm.com/2016/05/08/2、CanvasAndValueAnimator/"/>
 
 
 
@@ -398,7 +398,7 @@ invalidate
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/05/08/2、CanvasAndValueAnimator/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2016/05/08/2、CanvasAndValueAnimator/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -655,7 +655,7 @@ invalidate
 <p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9D%90%E6%A0%87%E8%BD%B4.png" alt="坐标轴" title="坐标轴" width="300"></p>
 <p>绘制坐标轴箭头，一次绘制多条线<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">mPaint.setStrokeWidth(<span class="number">3</span>);</div><div class="line"><span class="comment">//绘制X轴箭头</span></div><div class="line">canvas.drawLines(<span class="keyword">new</span> <span class="keyword">float</span>[]&#123;</div><div class="line">	mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span>,mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.95f</span>,-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,</div><div class="line">	mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span>,mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.95f</span>,mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span></div><div class="line">&#125;,mPaint);</div><div class="line"><span class="comment">//绘制Y轴箭头</span></div><div class="line">canvas.drawLines(<span class="keyword">new</span> <span class="keyword">float</span>[]&#123;</div><div class="line">      <span class="number">0</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>,mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,</div><div class="line">      <span class="number">0</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>,-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,</div><div class="line">&#125;,mPaint);</div></pre></td></tr></table></figure></p>
 <p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9D%90%E6%A0%87%E7%B3%BB.png" alt="坐标系" title="坐标系" width="300"></p>
-<p>为什么Y轴的箭头是向下的呢？这是因为原坐标系原点在左上角，向下为Y轴正方向，有疑问的可以查看我之前的文章<a href="http://www.idtkm.com/customview/piechart1/" target="_blank" rel="external">自定义View——Android坐标系与View绘制流程</a><br><br><br>如果觉得不舒服，一定要箭头向上的话，可以在绘制Y轴箭头之前翻转坐标系<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">canvas.scale(<span class="number">1</span>,-<span class="number">1</span>);<span class="comment">//翻转Y轴</span></div></pre></td></tr></table></figure></p>
+<p>为什么Y轴的箭头是向下的呢？这是因为原坐标系原点在左上角，向下为Y轴正方向，有疑问的可以查看我之前的文章<a href="http://www.idtkm.com/customview/piechart1/">自定义View——Android坐标系与View绘制流程</a><br><br><br>如果觉得不舒服，一定要箭头向上的话，可以在绘制Y轴箭头之前翻转坐标系<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">canvas.scale(<span class="number">1</span>,-<span class="number">1</span>);<span class="comment">//翻转Y轴</span></div></pre></td></tr></table></figure></p>
 <h3 id="3、画布变换"><a href="#3、画布变换" class="headerlink" title="3、画布变换"></a>3、画布变换</h3><p>绘制矩形<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//绘制矩形</span></div><div class="line">mPaint.setStyle(Paint.Style.STROKE);<span class="comment">//设置画笔类型</span></div><div class="line">canvas.drawRect(-mWidth/<span class="number">8</span>,-mHeight/<span class="number">8</span>,mWidth/<span class="number">8</span>,mHeight/<span class="number">8</span>,mPaint);</div></pre></td></tr></table></figure></p>
 <p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E7%9F%A9%E5%BD%A2.png" alt="矩形" title="矩形" width="300"></p>
 <p>平移，同时使用<strong>new Rect</strong>方法设置矩形<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">canvas.translate(<span class="number">200</span>,<span class="number">200</span>);</div><div class="line">mPaint.setColor(Color.BLUE);</div><div class="line">canvas.drawRect(<span class="keyword">new</span> RectF(-mWidth/<span class="number">8</span>,-mHeight/<span class="number">8</span>,mWidth/<span class="number">8</span>,mHeight/<span class="number">8</span>),mPaint);</div></pre></td></tr></table></figure></p>
@@ -717,6 +717,27 @@ invalidate
     <div>
       
         
+<div class="my_post_copyright">
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+  <!-- JS库 sweetalert 可修改路径 -->
+  <script type="text/javascript" src="http://jslibs.wuxubj.cn/sweetalert_mini/jquery-1.7.1.min.js"></script>
+  <script src="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.mini.css">
+  <p><span>文章作者:</span><a href="/" title="访问 Idtk 的个人博客">Idtk</a></p>
+  <p><span>本文标题:</span><a href="/2016/05/08/2、CanvasAndValueAnimator/">Canvas与ValueAnimator</a></p>
+  <!-- http://www.idtkm.com/2016/05/08/2、CanvasAndValueAnimator/ -->
+  <p><span>原始链接:</span><a href="/2016/05/08/2、CanvasAndValueAnimator/" title="Canvas与ValueAnimator">http://www.idtkm.com/2016/05/08/2、CanvasAndValueAnimator/</a></p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
 
       
     </div>
@@ -730,13 +751,6 @@ invalidate
 
 
     <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/CustomView/" rel="tag"># CustomView</a>
-          
-        </div>
-      
 
       
         
@@ -833,7 +847,7 @@ invalidate
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-count">21</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -851,7 +865,7 @@ invalidate
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -963,6 +977,11 @@ invalidate
     NexT.Mist
   </a>
 </div>
+
+
+
+
+
 
 
         

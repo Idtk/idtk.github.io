@@ -91,7 +91,7 @@
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="Idtk">
-<meta property="og:url" content="http://yoursite.com/index.html">
+<meta property="og:url" content="http://www.idtkm.com/index.html">
 <meta property="og:site_name" content="Idtk">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Idtk">
@@ -122,7 +122,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/"/>
+  <link rel="canonical" href="http://www.idtkm.com/"/>
 
 
 
@@ -265,7 +265,173 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/07/09/Surprise Kotlin/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2017/10/26/Retrofit2 & OkHttp3 Interceptor/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Idtk">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Idtk">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/10/26/Retrofit2 & OkHttp3 Interceptor/" itemprop="url">
+                  Retrofit2 + OkHttp3 配置及Interceptor原理
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-26T23:00:00+08:00">
+                2017-10-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/10/26/Retrofit2 & OkHttp3 Interceptor/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/10/26/Retrofit2 & OkHttp3 Interceptor/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>前段时间在给公司的新app做一些基础模块的封装，把Http模块中的一些基础配置，比如设置链接超时、Http Log Interceptor、Access Token Interceptor、Status Code Interceptor，以及Json转换、RxJava适配等设置做一下分享，再简单说说OkHttp Interceptor原理。</p>
+<h2 id="基本配置"><a href="#基本配置" class="headerlink" title="基本配置"></a>基本配置</h2><h3 id="OkHttp配置"><a href="#OkHttp配置" class="headerlink" title="OkHttp配置"></a>OkHttp配置</h3><p>OkHttp主要采用Builder模式进行配置</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">HttpLoggingInterceptor.Logger CUSTOM = <span class="keyword">new</span> HttpLoggingInterceptor.Logger() &#123;</div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">log</span><span class="params">(String message)</span> </span>&#123;</div><div class="line">        Platform.get().log(INFO, <span class="string">"OkHttp-idtk： "</span> + message, <span class="keyword">null</span>);</div><div class="line">    &#125;</div><div class="line">&#125;;</div><div class="line">HttpLoggingInterceptor loggingInterceptor = <span class="keyword">new</span> HttpLoggingInterceptor(CUSTOM);</div><div class="line">loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);</div><div class="line">OkHttpClient client = <span class="keyword">new</span> OkHttpClient.Builder()</div><div class="line">        .readTimeout(<span class="number">5</span>, TimeUnit.SECONDS)</div><div class="line">        .writeTimeout(<span class="number">5</span>, TimeUnit.SECONDS)</div><div class="line">        .connectTimeout(<span class="number">15</span>, TimeUnit.SECONDS)</div><div class="line">        .retryOnConnectionFailure(<span class="keyword">true</span>)</div><div class="line">        .addInterceptor(statusInterceptor)</div><div class="line">        .addInterceptor(loggingInterceptor)</div><div class="line">        .addNetworkInterceptor(tokenInterceptor)</div><div class="line">        .build();</div></pre></td></tr></table></figure>
+<ul>
+<li>retryOnConnectionFailure设置为true，表示请求失败后将会重连。</li>
+<li>HttpLoggingInterceptor用于拦截网络请求和响应，并输出Log，我在输出log的标识方面稍微修改了一下，便于使用时的区别。等级分为NONE/BASIC/HEADERS/BODY，其中BODY打印出的最为详细。</li>
+<li>addInterceptor与addNetworkInterceptor都是增加OkHttp的网络请求拦截器，但是其中是有一定区别的，前者是添加在与服务器连接之前和之后，后者是添加在与服务器建立连接和发起请求的之间。</li>
+<li>tokenInterceptor 是用来设置的token的拦截器，用于网络请求token的统一添加，具体内容会在接下来说明。</li>
+<li>statusInterceptor 用于响应返回状态码的处理，比如token过期、注册码无效等状态的处理。</li>
+</ul>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/10/26/Retrofit2 & OkHttp3 Interceptor/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2017/07/09/Surprise Kotlin/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -400,9 +566,12 @@
       
     </div>
 
+    <div>
+      
+    </div>
+
 
     <footer class="post-footer">
-      
 
       
 
@@ -426,7 +595,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/04/27/Retrofit/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2017/04/27/Retrofit/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -558,9 +727,12 @@
       
     </div>
 
+    <div>
+      
+    </div>
+
 
     <footer class="post-footer">
-      
 
       
 
@@ -584,7 +756,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/04/20/RecyclerView.Recycler/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2017/04/20/RecyclerView.Recycler/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -714,9 +886,12 @@
       
     </div>
 
+    <div>
+      
+    </div>
+
 
     <footer class="post-footer">
-      
 
       
 
@@ -740,7 +915,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/19/NinePhotoView/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2017/03/19/NinePhotoView/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -875,9 +1050,12 @@
       
     </div>
 
+    <div>
+      
+    </div>
+
 
     <footer class="post-footer">
-      
 
       
 
@@ -901,7 +1079,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/06/RecyclerView.LayoutManager/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2017/03/06/RecyclerView.LayoutManager/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -1030,9 +1208,12 @@
       
     </div>
 
+    <div>
+      
+    </div>
+
 
     <footer class="post-footer">
-      
 
       
 
@@ -1056,7 +1237,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/11/10/F1、Property Animation/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2016/11/10/F1、Property Animation/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -1185,9 +1366,12 @@
       
     </div>
 
+    <div>
+      
+    </div>
+
 
     <footer class="post-footer">
-      
 
       
 
@@ -1211,7 +1395,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/10/09/14、Matrix/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2016/10/09/14、Matrix/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -1340,9 +1524,12 @@
       
     </div>
 
+    <div>
+      
+    </div>
+
 
     <footer class="post-footer">
-      
 
       
 
@@ -1366,7 +1553,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/09/18/13、ColorMatrix/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2016/09/18/13、ColorMatrix/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -1547,9 +1734,12 @@
       
     </div>
 
+    <div>
+      
+    </div>
+
 
     <footer class="post-footer">
-      
 
       
 
@@ -1573,7 +1763,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/08/21/12、TouchEventSource/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2016/08/21/12、TouchEventSource/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -1705,205 +1895,12 @@
       
     </div>
 
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/08/15/11、TouchEvent/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Idtk">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/header.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Idtk">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/08/15/11、TouchEvent/" itemprop="url">
-                  更简单的学习Android事件分发
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-08-15T00:00:00+08:00">
-                2016-08-15
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/" itemprop="url" rel="index">
-                    <span itemprop="name">Android</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2016/08/15/11、TouchEvent/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/08/15/11、TouchEvent/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>事件分发是Android中非常重要的机制，是用户与界面交互的基础。这篇文章将通过示例打印出的Log，绘制出事件分发的流程图，让大家更容易的去理解Android的事件分发机制。<br></p>
-<p><a href="https://github.com/Idtk/Blog">自定义View系列目录</a></p>
-<h2 id="一、必要的基础知识"><a href="#一、必要的基础知识" class="headerlink" title="一、必要的基础知识"></a>一、必要的基础知识</h2><h3 id="1、相关方法"><a href="#1、相关方法" class="headerlink" title="1、相关方法"></a>1、相关方法</h3><p>Android中与事件分发相关的方法主要包括dispatchTouchEvent、onInterceptTouchEvent、onTouchEvent三个方法，而事件分发一般会经过三种容器，分别为Activity、ViewGroup、View。下表对这三种容器分别拥有的事件分发相关方法进行了整理。</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">事件相关方法</th>
-<th style="text-align:center">方法功能</th>
-<th>Activity</th>
-<th>ViewGroup</th>
-<th>View</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">public boolean dispatchTouchEvent</td>
-<td style="text-align:center">事件分发</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td style="text-align:center">public boolean onInterceptTouchEvent</td>
-<td style="text-align:center">事件拦截</td>
-<td>No</td>
-<td>Yes</td>
-<td>No</td>
-</tr>
-<tr>
-<td style="text-align:center">public boolean onTouchEvent</td>
-<td style="text-align:center">事件消费</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-</tr>
-</tbody>
-</table>
-<ul>
-<li>分发: dispatchTouchEvent如果返回true，则表示在当前View或者其子View(子子…View)中，找到了处理事件的View；反之，则表示没有寻找到</li>
-<li>拦截: onInterceptTouchEvent如果返回true，则表示这个事件由当前View进行处理，不管处理结果如何，都不会再向子View传递这个事件；反之，则表示当前View不主动处理这个事件，除非他的子View返回的事件分发结果为false</li>
-<li>消费: onTouchEvent如果返回true，则表示当前View就是事件传递的终点；反之，则表示当前View不是事件传递的终点</li>
-</ul>
-<p><br></p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2016/08/15/11、TouchEvent/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
     <div>
       
     </div>
 
 
     <footer class="post-footer">
-      
 
       
 
@@ -1922,7 +1919,7 @@
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1967,7 +1964,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-count">21</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -1985,7 +1982,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -2081,6 +2078,11 @@
     NexT.Mist
   </a>
 </div>
+
+
+
+
+
 
 
         

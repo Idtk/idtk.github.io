@@ -93,7 +93,7 @@
 一、Matrix结构在Android开发中，矩阵是一个非常强大且有趣的工具，在之前的一篇文章中对ColorMatrix的原理进行了详细的分析，用其实现了一些简单的颜色过滤功能，这一次我们来探寻一下同样强大的Matrix，它具有更改图像图形的有趣功能。我们先来看看Matrix的结构。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Matrix原理">
-<meta property="og:url" content="http://yoursite.com/2016/10/09/14、Matrix/index.html">
+<meta property="og:url" content="http://www.idtkm.com/2016/10/09/14、Matrix/index.html">
 <meta property="og:site_name" content="Idtk">
 <meta property="og:description" content="自定义View系列目录
 一、Matrix结构在Android开发中，矩阵是一个非常强大且有趣的工具，在之前的一篇文章中对ColorMatrix的原理进行了详细的分析，用其实现了一些简单的颜色过滤功能，这一次我们来探寻一下同样强大的Matrix，它具有更改图像图形的有趣功能。我们先来看看Matrix的结构。">
@@ -139,7 +139,7 @@
 <meta property="og:image" content="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20&%20&\\\%20&%20Result%20&%20Matrix%20&\\\%20&%20&%20\end{1}%20\right%20]%20=%20\left%20[%20\begin{matrix}%20&%20&\\\%20&%20Initial%20&%20Matrix%20&\\\%20&%20&%20\end{1}%20\right%20]%20%20\left%20[%20\begin{matrix}%20sx%20&%200%20&%200%20\\\%200&%20sy%20&%200%20\\\%200%20&%200%20&%201\end{1}%20\right%20]%20%20\left%20[%20\begin{matrix}%201%20&%200%20&%20tx%20\\\%200&%201%20&%20ty%20\\\%200%20&%200%20&%201\end{1}%20\right%20]%20$$">
 <meta property="og:image" content="http://latex.codecogs.com/png.latex?$$%20M'%20=%20S%20\cdot%20M%20$$">
 <meta property="og:image" content="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20&%20&\\\%20&%20Result%20&%20Matrix%20&\\\%20&%20&%20\end{1}%20\right%20]%20=%20\left%20[%20\begin{matrix}%201%20&%200%20&%20tx%20\\\%200&%201%20&%20ty%20\\\%200%20&%200%20&%201\end{1}%20\right%20]%20%20\left%20[%20\begin{matrix}%20sx%20&%200%20&%200%20\\\%200&%20sy%20&%200%20\\\%200%20&%200%20&%201\end{1}%20\right%20]%20\left%20[%20\begin{matrix}%20&%20&\\\%20&%20Initial%20&%20Matrix%20&\\\%20&%20&%20\end{1}%20\right%20]%20%20$$">
-<meta property="og:updated_time" content="2017-03-12T13:39:05.822Z">
+<meta property="og:updated_time" content="2017-10-15T16:01:01.572Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Matrix原理">
 <meta name="twitter:description" content="自定义View系列目录
@@ -172,7 +172,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/10/09/14、Matrix/"/>
+  <link rel="canonical" href="http://www.idtkm.com/2016/10/09/14、Matrix/"/>
 
 
 
@@ -313,7 +313,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/10/09/14、Matrix/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2016/10/09/14、Matrix/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -473,7 +473,7 @@
 <p>根据这个规则，也就解释了我们在使用过程中修改<code>MPERSP_2</code>参数时，图像会发生的类似缩放的效果，其实就是透视变换的效果。<br></p>
 <h3 id="使用示例-5"><a href="#使用示例-5" class="headerlink" title="使用示例"></a>使用示例</h3><p>现在我们使用<code>Matrix</code>自带的<code>setValues</code>方法 :<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> *  测试的Matrix操作</div><div class="line"> */</div><div class="line">mMatrix.setValues(<span class="keyword">new</span> <span class="keyword">float</span>[]&#123;<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1.5f</span>&#125;);</div><div class="line">Log.d(<span class="string">"TAG"</span>,mMatrix.toString());</div><div class="line"></div><div class="line"><span class="comment">// Log</span></div><div class="line">D/TAG: Matrix&#123;[<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>][<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>][<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.5</span>]&#125;</div></pre></td></tr></table></figure></p>
 <p><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/Matix5.png" alt="Matix" title="Matix"><br><br></p>
-<h2 id="三、Matrix前乘与后乘"><a href="#三、Matrix前乘与后乘" class="headerlink" title="三、Matrix前乘与后乘"></a>三、Matrix前乘与后乘</h2><p>Matrix前乘与后乘的情况跟我在之前的文章<a href="http://www.idtkm.com/customview/cutomview13/" target="_blank" rel="external">ColorMatrix详解</a>中<strong>ColorMatrix相乘</strong>章节所描述的基本相同。<br></p>
+<h2 id="三、Matrix前乘与后乘"><a href="#三、Matrix前乘与后乘" class="headerlink" title="三、Matrix前乘与后乘"></a>三、Matrix前乘与后乘</h2><p>Matrix前乘与后乘的情况跟我在之前的文章<a href="http://www.idtkm.com/customview/cutomview13/">ColorMatrix详解</a>中<strong>ColorMatrix相乘</strong>章节所描述的基本相同。<br></p>
 <h3 id="前乘"><a href="#前乘" class="headerlink" title="前乘"></a>前乘</h3><p>前乘相当于，当前矩阵乘以输入的矩阵<img src="http://latex.codecogs.com/png.latex?$$%20M&#39;%20=%20M%20\cdot%20S%20$$" alt=""><br></p>
 <p>示例如下:</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mMatrix.reset();</div><div class="line">mMatrix.preScale(sx,sy);</div><div class="line">mMatrix.preTranslate(tx,ty);</div></pre></td></tr></table></figure>
@@ -484,6 +484,27 @@
 <p><img src="http://latex.codecogs.com/png.latex?$$\left%20[%20\begin{matrix}%20&amp;%20&amp;\\\%20&amp;%20Result%20&amp;%20Matrix%20&amp;\\\%20&amp;%20&amp;%20\end{1}%20\right%20]%20=%20\left%20[%20\begin{matrix}%201%20&amp;%200%20&amp;%20tx%20\\\%200&amp;%201%20&amp;%20ty%20\\\%200%20&amp;%200%20&amp;%201\end{1}%20\right%20]%20%20\left%20[%20\begin{matrix}%20sx%20&amp;%200%20&amp;%200%20\\\%200&amp;%20sy%20&amp;%200%20\\\%200%20&amp;%200%20&amp;%201\end{1}%20\right%20]%20\left%20[%20\begin{matrix}%20&amp;%20&amp;\\\%20&amp;%20Initial%20&amp;%20Matrix%20&amp;\\\%20&amp;%20&amp;%20\end{1}%20\right%20]%20%20$$" alt=""></p>
 <h2 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h2><p>本文深入分析了Matrix的原理，并讲解了其常用方法和前后乘的方法。如果在阅读过程中，有任何疑问与问题，欢迎与我联系。<br><br><strong>博客:www.idtkm.com</strong><br><br><strong>GitHub:<a href="https://github.com/Idtk" target="_blank" rel="external">https://github.com/Idtk</a></strong><br><br><strong>微博:<a href="http://weibo.com/Idtk" target="_blank" rel="external">http://weibo.com/Idtk</a></strong><br><br><strong>邮箱:IdtkMa@gmail.com</strong><br><br><br></p>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://developer.android.com/reference/android/graphics/Matrix.html" target="_blank" rel="external">Matrix</a><br><br><a href="http://www.cnblogs.com/qiengo/archive/2012/06/30/2570874.html#code" target="_blank" rel="external">Android Matrix</a><br><br><a href="http://blog.csdn.net/linmiansheng/article/details/18820599" target="_blank" rel="external">Android中关于矩阵（Matrix）前乘后乘的一些认识</a><br><br><a href="https://oncemore2020.github.io/blog/homogeneous/" target="_blank" rel="external">齐次坐标系入门级思考</a><br><br><a href="http://www.jianshu.com/p/7e701d7bfd79" target="_blank" rel="external">次坐标和投影</a><br><br><a href="https://zh.wikipedia.org/wiki/%E5%8F%98%E6%8D%A2%E7%9F%A9%E9%98%B5" target="_blank" rel="external">变换矩阵</a><br></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div class="my_post_copyright">
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+  <!-- JS库 sweetalert 可修改路径 -->
+  <script type="text/javascript" src="http://jslibs.wuxubj.cn/sweetalert_mini/jquery-1.7.1.min.js"></script>
+  <script src="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.mini.css">
+  <p><span>文章作者:</span><a href="/" title="访问 Idtk 的个人博客">Idtk</a></p>
+  <p><span>本文标题:</span><a href="/2016/10/09/14、Matrix/">Matrix原理</a></p>
+  <!-- http://www.idtkm.com/2016/10/09/14、Matrix/ -->
+  <p><span>原始链接:</span><a href="/2016/10/09/14、Matrix/" title="Matrix原理">http://www.idtkm.com/2016/10/09/14、Matrix/</a></p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+
 
       
     </div>
@@ -504,13 +525,6 @@
 
 
     <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/CustomView/" rel="tag"># CustomView</a>
-          
-        </div>
-      
 
       
         
@@ -611,7 +625,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-count">21</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -629,7 +643,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -741,6 +755,11 @@
     NexT.Mist
   </a>
 </div>
+
+
+
+
+
 
 
         

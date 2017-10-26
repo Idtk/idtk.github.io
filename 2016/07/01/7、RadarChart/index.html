@@ -95,14 +95,14 @@
 一、获取View宽高以及cos、sin在onSizeChanged函数中，可以获取当前View的宽高以及根据padding值计算出的实际绘制区域的宽高，同时计">
 <meta property="og:type" content="article">
 <meta property="og:title" content="雷达图(蜘蛛网图)的实现">
-<meta property="og:url" content="http://yoursite.com/2016/07/01/7、RadarChart/index.html">
+<meta property="og:url" content="http://www.idtkm.com/2016/07/01/7、RadarChart/index.html">
 <meta property="og:site_name" content="Idtk">
 <meta property="og:description" content="效果图:
 阅读本文前需了解View的绘制流程，画布操作，以及Path的常用方法，如果不熟悉，请先查看我之前的文章Android坐标系与View绘制流程、Canvas与ValueAnimator、Path图形与逻辑运算
 自定义View系列目录
 一、获取View宽高以及cos、sin在onSizeChanged函数中，可以获取当前View的宽高以及根据padding值计算出的实际绘制区域的宽高，同时计">
 <meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/radar.png">
-<meta property="og:updated_time" content="2017-03-12T13:06:24.845Z">
+<meta property="og:updated_time" content="2017-10-15T16:01:51.378Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="雷达图(蜘蛛网图)的实现">
 <meta name="twitter:description" content="效果图:
@@ -137,7 +137,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/07/01/7、RadarChart/"/>
+  <link rel="canonical" href="http://www.idtkm.com/2016/07/01/7、RadarChart/"/>
 
 
 
@@ -278,7 +278,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/07/01/7、RadarChart/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2016/07/01/7、RadarChart/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -383,7 +383,7 @@
 
       
         <p>效果图:<br><br><img src="http://ompb0h8qq.bkt.clouddn.com/old/radar.png" alt="radar" title="radar" width="300"><br></p>
-<p>阅读本文前需了解View的绘制流程，画布操作，以及Path的常用方法，如果不熟悉，请先查看我之前的文章<a href="http://www.idtkm.com/customview/customview1/" target="_blank" rel="external">Android坐标系与View绘制流程</a>、<a href="http://www.idtkm.com/customview/customview2/" target="_blank" rel="external">Canvas与ValueAnimator</a>、<a href="http://www.idtkm.com/customview/customview4/" target="_blank" rel="external">Path图形与逻辑运算</a><br></p>
+<p>阅读本文前需了解View的绘制流程，画布操作，以及Path的常用方法，如果不熟悉，请先查看我之前的文章<a href="http://www.idtkm.com/customview/customview1/">Android坐标系与View绘制流程</a>、<a href="http://www.idtkm.com/customview/customview2/">Canvas与ValueAnimator</a>、<a href="http://www.idtkm.com/customview/customview4/">Path图形与逻辑运算</a><br></p>
 <p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
 <h2 id="一、获取View宽高以及cos、sin"><a href="#一、获取View宽高以及cos、sin" class="headerlink" title="一、获取View宽高以及cos、sin"></a>一、获取View宽高以及cos、sin</h2><p>在onSizeChanged函数中，可以获取当前View的宽高以及根据padding值计算出的实际绘制区域的宽高，同时计算出雷达图的半径设置并通过PathMeasure类的<strong>getPosTan</strong>方法获得此任意正多边形各角坐标的余弦值、正弦值。<br></p>
 <a id="more"></a>
@@ -432,6 +432,27 @@
     <div>
       
         
+<div class="my_post_copyright">
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+  <!-- JS库 sweetalert 可修改路径 -->
+  <script type="text/javascript" src="http://jslibs.wuxubj.cn/sweetalert_mini/jquery-1.7.1.min.js"></script>
+  <script src="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.mini.css">
+  <p><span>文章作者:</span><a href="/" title="访问 Idtk 的个人博客">Idtk</a></p>
+  <p><span>本文标题:</span><a href="/2016/07/01/7、RadarChart/">雷达图(蜘蛛网图)的实现</a></p>
+  <!-- http://www.idtkm.com/2016/07/01/7、RadarChart/ -->
+  <p><span>原始链接:</span><a href="/2016/07/01/7、RadarChart/" title="雷达图(蜘蛛网图)的实现">http://www.idtkm.com/2016/07/01/7、RadarChart/</a></p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
 
       
     </div>
@@ -445,13 +466,6 @@
 
 
     <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/CustomView/" rel="tag"># CustomView</a>
-          
-        </div>
-      
 
       
         
@@ -552,7 +566,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-count">21</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -570,7 +584,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -682,6 +696,11 @@
     NexT.Mist
   </a>
 </div>
+
+
+
+
+
 
 
         

@@ -116,7 +116,7 @@ setLastPoint
 移动上一次的终点位置，对">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Path图形与逻辑运算">
-<meta property="og:url" content="http://yoursite.com/2016/06/01/4、PathFigureAndLogical/index.html">
+<meta property="og:url" content="http://www.idtkm.com/2016/06/01/4、PathFigureAndLogical/index.html">
 <meta property="og:site_name" content="Idtk">
 <meta property="og:description" content="自定义View系列目录
 涉及知识Path
@@ -155,7 +155,7 @@ setLastPoint
 <meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E5%90%88%E9%9B%86.png">
 <meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E5%BC%82%E6%88%96.png">
 <meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9C%86%E8%A7%923.png">
-<meta property="og:updated_time" content="2017-03-12T13:01:35.963Z">
+<meta property="og:updated_time" content="2017-10-15T16:02:17.878Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Path图形与逻辑运算">
 <meta name="twitter:description" content="自定义View系列目录
@@ -211,7 +211,7 @@ setLastPoint
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/06/01/4、PathFigureAndLogical/"/>
+  <link rel="canonical" href="http://www.idtkm.com/2016/06/01/4、PathFigureAndLogical/"/>
 
 
 
@@ -352,7 +352,7 @@ setLastPoint
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/06/01/4、PathFigureAndLogical/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2016/06/01/4、PathFigureAndLogical/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -529,7 +529,7 @@ setLastPoint
 <a id="more"></a>
 <h2 id="一、什么是Path"><a href="#一、什么是Path" class="headerlink" title="一、什么是Path"></a>一、什么是Path</h2><p>官方描述:<br><br>&nbsp;&nbsp;&nbsp;&nbsp;Path class 封装了由直线、二次、三次贝塞尔曲线构成的多重曲线几何路径。它可以用canvas.drawPath(path,paint)方法绘图，填充和线都可以（根据paint的样式），或者它可以用于在绘图路径上裁剪或者绘出文本。<br><br></p>
 <p>我的理解:<br><br>&nbsp;&nbsp;&nbsp;&nbsp;Path由任意多条直线、二次贝塞尔或三次贝塞尔曲线组成,可以选择填充或者描边模式，可以使用它裁剪画布或者绘制文字。</p>
-<h2 id="二、添加路径"><a href="#二、添加路径" class="headerlink" title="二、添加路径"></a>二、添加路径</h2><h3 id="1、lineTo-moveTo"><a href="#1、lineTo-moveTo" class="headerlink" title="1、lineTo,moveTo"></a>1、lineTo,moveTo</h3><p>在之前的文章中，使用canvas的函数绘制过<a href="http://www.idtkm.com/customview/customview2/" target="_blank" rel="external">坐标系</a>，这次使用path来绘制。<br></p>
+<h2 id="二、添加路径"><a href="#二、添加路径" class="headerlink" title="二、添加路径"></a>二、添加路径</h2><h3 id="1、lineTo-moveTo"><a href="#1、lineTo-moveTo" class="headerlink" title="1、lineTo,moveTo"></a>1、lineTo,moveTo</h3><p>在之前的文章中，使用canvas的函数绘制过<a href="http://www.idtkm.com/customview/customview2/">坐标系</a>，这次使用path来绘制。<br></p>
 <h4 id="a、创建画笔"><a href="#a、创建画笔" class="headerlink" title="a、创建画笔"></a>a、创建画笔</h4><p>创建画笔并初始化<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//创建画笔</span></div><div class="line"><span class="keyword">private</span> Paint mPaint = <span class="keyword">new</span> Paint();</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initPaint</span><span class="params">()</span></span>&#123;</div><div class="line">    <span class="comment">//初始化画笔</span></div><div class="line">    mPaint.setStyle(Paint.Style.FILL);<span class="comment">//设置画笔类型</span></div><div class="line">    mPaint.setAntiAlias(<span class="keyword">true</span>);<span class="comment">//抗锯齿</span></div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <h4 id="b、绘制坐标轴"><a href="#b、绘制坐标轴" class="headerlink" title="b、绘制坐标轴"></a>b、绘制坐标轴</h4><p>使用onSizeChanged方法，获取根据父布局等因素确认的View宽高<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//宽高</span></div><div class="line"><span class="keyword">private</span> <span class="keyword">int</span> mWidth;</div><div class="line"><span class="keyword">private</span> <span class="keyword">int</span> mHeight;</div><div class="line"></div><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onSizeChanged</span><span class="params">(<span class="keyword">int</span> w, <span class="keyword">int</span> h, <span class="keyword">int</span> oldw, <span class="keyword">int</span> oldh)</span> </span>&#123;</div><div class="line">    <span class="keyword">super</span>.onSizeChanged(w, h, oldw, oldh);</div><div class="line">    mWidth = w;</div><div class="line">    mHeight = h;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>把原点从左上角移动到画布中心,绘制原点与四个端点<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> Path mPath = <span class="keyword">new</span> Path();</div><div class="line"></div><div class="line">canvas.translate(mWidth/<span class="number">2</span>,mHeight/<span class="number">2</span>);<span class="comment">// 将画布坐标原点移动到中心位置</span></div><div class="line"><span class="comment">//绘制坐标原点</span></div><div class="line">mPaint.setColor(Color.BLACK);<span class="comment">//设置画笔颜色</span></div><div class="line">mPaint.setStrokeWidth(<span class="number">10</span>);<span class="comment">//为了看得清楚,设置了较大的画笔宽度</span></div><div class="line">canvas.drawPoint(<span class="number">0</span>,<span class="number">0</span>,mPaint);</div><div class="line"><span class="comment">//绘制坐标轴4个断点</span></div><div class="line">canvas.drawPoints(<span class="keyword">new</span> <span class="keyword">float</span>[]&#123;</div><div class="line">        mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span></div><div class="line">        ,<span class="number">0</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span></div><div class="line">        ,-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span></div><div class="line">        ,<span class="number">0</span>,-mHeight/<span class="number">2</span>*<span class="number">0.8f</span>&#125;,mPaint);</div></pre></td></tr></table></figure></p>
@@ -615,6 +615,27 @@ setLastPoint
     <div>
       
         
+<div class="my_post_copyright">
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+  <!-- JS库 sweetalert 可修改路径 -->
+  <script type="text/javascript" src="http://jslibs.wuxubj.cn/sweetalert_mini/jquery-1.7.1.min.js"></script>
+  <script src="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.mini.css">
+  <p><span>文章作者:</span><a href="/" title="访问 Idtk 的个人博客">Idtk</a></p>
+  <p><span>本文标题:</span><a href="/2016/06/01/4、PathFigureAndLogical/">Path图形与逻辑运算</a></p>
+  <!-- http://www.idtkm.com/2016/06/01/4、PathFigureAndLogical/ -->
+  <p><span>原始链接:</span><a href="/2016/06/01/4、PathFigureAndLogical/" title="Path图形与逻辑运算">http://www.idtkm.com/2016/06/01/4、PathFigureAndLogical/</a></p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
 
       
     </div>
@@ -628,13 +649,6 @@ setLastPoint
 
 
     <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/CustomView/" rel="tag"># CustomView</a>
-          
-        </div>
-      
 
       
         
@@ -735,7 +749,7 @@ setLastPoint
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-count">21</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -753,7 +767,7 @@ setLastPoint
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -865,6 +879,11 @@ setLastPoint
     NexT.Mist
   </a>
 </div>
+
+
+
+
+
 
 
         

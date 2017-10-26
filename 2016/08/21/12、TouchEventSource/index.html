@@ -94,12 +94,12 @@
 一、从Activity开始Android的触摸事件，是由windowManagerService进行采集，之后传递到Activiy进行处理。我们这里从Activity#dis">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Android事件分发机制源码解析">
-<meta property="og:url" content="http://yoursite.com/2016/08/21/12、TouchEventSource/index.html">
+<meta property="og:url" content="http://www.idtkm.com/2016/08/21/12、TouchEventSource/index.html">
 <meta property="og:site_name" content="Idtk">
 <meta property="og:description" content="在更简单的学习Android事件分发中，使用日志、比喻、流程图相结合的方式，以更简单的方法去分析了Android的事件分发机制。本篇文章将采用分析源码的方式，更深入的解析Android的事件分发机制。
 自定义View系列目录
 一、从Activity开始Android的触摸事件，是由windowManagerService进行采集，之后传递到Activiy进行处理。我们这里从Activity#dis">
-<meta property="og:updated_time" content="2017-03-12T13:07:14.266Z">
+<meta property="og:updated_time" content="2017-10-15T16:01:15.204Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android事件分发机制源码解析">
 <meta name="twitter:description" content="在更简单的学习Android事件分发中，使用日志、比喻、流程图相结合的方式，以更简单的方法去分析了Android的事件分发机制。本篇文章将采用分析源码的方式，更深入的解析Android的事件分发机制。
@@ -132,7 +132,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/08/21/12、TouchEventSource/"/>
+  <link rel="canonical" href="http://www.idtkm.com/2016/08/21/12、TouchEventSource/"/>
 
 
 
@@ -273,7 +273,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/08/21/12、TouchEventSource/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2016/08/21/12、TouchEventSource/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -377,7 +377,7 @@
       
 
       
-        <p>在<a href="http://www.idtkm.com/customview/customview11/" target="_blank" rel="external">更简单的学习Android事件分发</a>中，使用日志、比喻、流程图相结合的方式，以更简单的方法去分析了Android的事件分发机制。本篇文章将采用分析源码的方式，更深入的解析Android的事件分发机制。</p>
+        <p>在<a href="http://www.idtkm.com/customview/customview11/">更简单的学习Android事件分发</a>中，使用日志、比喻、流程图相结合的方式，以更简单的方法去分析了Android的事件分发机制。本篇文章将采用分析源码的方式，更深入的解析Android的事件分发机制。</p>
 <p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
 <h2 id="一、从Activity开始"><a href="#一、从Activity开始" class="headerlink" title="一、从Activity开始"></a>一、从Activity开始</h2><p>Android的触摸事件，是由windowManagerService进行采集，之后传递到Activiy进行处理。我们这里从Activity#dispatchTouchEvent方法开始解析<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">dispatchTouchEvent</span><span class="params">(MotionEvent ev)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (ev.getAction() == MotionEvent.ACTION_DOWN) &#123;</div><div class="line">        onUserInteraction();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (getWindow().superDispatchTouchEvent(ev)) &#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> onTouchEvent(ev);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>上述代码中，<code>onUserInteraction()</code>是一个空的实现，我们直接来看下<br><code>getWindow().superDispatchTouchEvent(ev)</code>方法。window是一个抽象的方法，不过系统给它提供了一个实现类PhoneWindow，我们这里看下它的<code>superDispatchTouchEvent(ev)</code>方法。</p>
@@ -403,6 +403,27 @@
     <div>
       
         
+<div class="my_post_copyright">
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+  <!-- JS库 sweetalert 可修改路径 -->
+  <script type="text/javascript" src="http://jslibs.wuxubj.cn/sweetalert_mini/jquery-1.7.1.min.js"></script>
+  <script src="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.mini.css">
+  <p><span>文章作者:</span><a href="/" title="访问 Idtk 的个人博客">Idtk</a></p>
+  <p><span>本文标题:</span><a href="/2016/08/21/12、TouchEventSource/">Android事件分发机制源码解析</a></p>
+  <!-- http://www.idtkm.com/2016/08/21/12、TouchEventSource/ -->
+  <p><span>原始链接:</span><a href="/2016/08/21/12、TouchEventSource/" title="Android事件分发机制源码解析">http://www.idtkm.com/2016/08/21/12、TouchEventSource/</a></p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
 
       
     </div>
@@ -416,13 +437,6 @@
 
 
     <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/CustomView/" rel="tag"># CustomView</a>
-          
-        </div>
-      
 
       
         
@@ -523,7 +537,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-count">21</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -541,7 +555,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -653,6 +667,11 @@
     NexT.Mist
   </a>
 </div>
+
+
+
+
+
 
 
         

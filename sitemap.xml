@@ -2,154 +2,161 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://yoursite.com/2017/07/09/Surprise%20Kotlin/</loc>
+    <loc>http://www.idtkm.com/2017/10/26/Retrofit2%20&%20OkHttp3%20Interceptor/</loc>
     
-    <lastmod>2017-07-09T06:31:12.036Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2017/04/27/Retrofit/</loc>
-    
-    <lastmod>2017-05-02T12:40:38.306Z</lastmod>
+    <lastmod>2017-10-26T15:23:00.342Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2017/04/20/RecyclerView.Recycler/</loc>
+    <loc>http://www.idtkm.com/2016/05/08/1%E3%80%81CoordinateAndProcess/</loc>
     
-    <lastmod>2017-04-20T11:54:38.080Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2017/03/19/NinePhotoView/</loc>
-    
-    <lastmod>2017-03-19T13:31:31.162Z</lastmod>
+    <lastmod>2017-10-15T16:02:36.459Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2016/07/27/8%E3%80%81Scroll/</loc>
+    <loc>http://www.idtkm.com/2016/05/08/2%E3%80%81CanvasAndValueAnimator/</loc>
     
-    <lastmod>2017-03-13T11:31:47.923Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2016/09/18/13%E3%80%81ColorMatrix/</loc>
-    
-    <lastmod>2017-03-12T13:48:39.341Z</lastmod>
+    <lastmod>2017-10-15T16:02:30.576Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2016/10/09/14%E3%80%81Matrix/</loc>
+    <loc>http://www.idtkm.com/2016/05/21/3%E3%80%81Multi-lineTextCenter/</loc>
     
-    <lastmod>2017-03-12T13:39:05.822Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2016/11/10/F1%E3%80%81Property%20Animation/</loc>
-    
-    <lastmod>2017-03-12T13:12:09.402Z</lastmod>
+    <lastmod>2017-10-15T16:02:24.491Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2017/03/06/RecyclerView.LayoutManager/</loc>
+    <loc>http://www.idtkm.com/2016/06/01/4%E3%80%81PathFigureAndLogical/</loc>
     
-    <lastmod>2017-03-12T13:09:39.019Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2016/08/21/12%E3%80%81TouchEventSource/</loc>
-    
-    <lastmod>2017-03-12T13:07:14.266Z</lastmod>
+    <lastmod>2017-10-15T16:02:17.878Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2016/08/15/11%E3%80%81TouchEvent/</loc>
+    <loc>http://www.idtkm.com/2016/06/13/5%E3%80%81PieChart/</loc>
     
-    <lastmod>2017-03-12T13:07:07.130Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2016/08/10/10%E3%80%81RequestLayout/</loc>
-    
-    <lastmod>2017-03-12T13:07:00.315Z</lastmod>
+    <lastmod>2017-10-15T16:02:11.740Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2016/08/02/9%E3%80%81Invalidate/</loc>
+    <loc>http://www.idtkm.com/2016/06/21/6%E3%80%81Bezier/</loc>
     
-    <lastmod>2017-03-12T13:06:43.597Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2016/07/01/7%E3%80%81RadarChart/</loc>
-    
-    <lastmod>2017-03-12T13:06:24.845Z</lastmod>
+    <lastmod>2017-10-15T16:02:06.322Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2016/06/21/6%E3%80%81Bezier/</loc>
+    <loc>http://www.idtkm.com/2016/07/01/7%E3%80%81RadarChart/</loc>
     
-    <lastmod>2017-03-12T13:06:02.445Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2016/06/13/5%E3%80%81PieChart/</loc>
-    
-    <lastmod>2017-03-12T13:04:58.811Z</lastmod>
+    <lastmod>2017-10-15T16:01:51.378Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2016/06/01/4%E3%80%81PathFigureAndLogical/</loc>
+    <loc>http://www.idtkm.com/2016/07/27/8%E3%80%81Scroll/</loc>
     
-    <lastmod>2017-03-12T13:01:35.963Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2016/05/21/3%E3%80%81Multi-lineTextCenter/</loc>
-    
-    <lastmod>2017-03-12T13:01:19.627Z</lastmod>
+    <lastmod>2017-10-15T16:01:42.653Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2016/05/08/2%E3%80%81CanvasAndValueAnimator/</loc>
+    <loc>http://www.idtkm.com/2016/08/02/9%E3%80%81Invalidate/</loc>
     
-    <lastmod>2017-03-12T13:01:14.476Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2016/05/08/1%E3%80%81CoordinateAndProcess/</loc>
-    
-    <lastmod>2017-03-12T13:01:07.746Z</lastmod>
+    <lastmod>2017-10-15T16:01:35.384Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/tags/index.html</loc>
+    <loc>http://www.idtkm.com/2016/08/10/10%E3%80%81RequestLayout/</loc>
+    
+    <lastmod>2017-10-15T16:01:29.008Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.idtkm.com/2016/08/15/11%E3%80%81TouchEvent/</loc>
+    
+    <lastmod>2017-10-15T16:01:22.179Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.idtkm.com/2016/08/21/12%E3%80%81TouchEventSource/</loc>
+    
+    <lastmod>2017-10-15T16:01:15.204Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.idtkm.com/2016/09/18/13%E3%80%81ColorMatrix/</loc>
+    
+    <lastmod>2017-10-15T16:01:08.748Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.idtkm.com/2016/10/09/14%E3%80%81Matrix/</loc>
+    
+    <lastmod>2017-10-15T16:01:01.572Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.idtkm.com/2016/11/10/F1%E3%80%81Property%20Animation/</loc>
+    
+    <lastmod>2017-10-15T16:00:53.461Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.idtkm.com/2017/03/19/NinePhotoView/</loc>
+    
+    <lastmod>2017-10-15T16:00:45.865Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.idtkm.com/2017/03/06/RecyclerView.LayoutManager/</loc>
+    
+    <lastmod>2017-10-15T16:00:39.553Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.idtkm.com/2017/04/20/RecyclerView.Recycler/</loc>
+    
+    <lastmod>2017-10-15T16:00:33.542Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.idtkm.com/2017/04/27/Retrofit/</loc>
+    
+    <lastmod>2017-10-15T16:00:27.180Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.idtkm.com/2017/07/09/Surprise%20Kotlin/</loc>
+    
+    <lastmod>2017-10-15T15:54:37.083Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.idtkm.com/tags/index.html</loc>
     
     <lastmod>2017-03-12T09:06:03.210Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/categories/index.html</loc>
+    <loc>http://www.idtkm.com/categories/index.html</loc>
     
     <lastmod>2017-03-12T09:05:39.596Z</lastmod>
     

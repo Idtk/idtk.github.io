@@ -94,7 +94,7 @@
 一、必要的基础知识1、相关方法Android中与事件分发相关的方法主要包括dispatchTouchEvent、onInterceptTouchEvent、onTouchEvent三个方法，而事件分发">
 <meta property="og:type" content="article">
 <meta property="og:title" content="更简单的学习Android事件分发">
-<meta property="og:url" content="http://yoursite.com/2016/08/15/11、TouchEvent/index.html">
+<meta property="og:url" content="http://www.idtkm.com/2016/08/15/11、TouchEvent/index.html">
 <meta property="og:site_name" content="Idtk">
 <meta property="og:description" content="事件分发是Android中非常重要的机制，是用户与界面交互的基础。这篇文章将通过示例打印出的Log，绘制出事件分发的流程图，让大家更容易的去理解Android的事件分发机制。
 自定义View系列目录
@@ -111,7 +111,7 @@
 <meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/intercept2.png">
 <meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/cancel1.png">
 <meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/cancel2.png">
-<meta property="og:updated_time" content="2017-03-12T13:07:07.130Z">
+<meta property="og:updated_time" content="2017-10-15T16:01:22.179Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="更简单的学习Android事件分发">
 <meta name="twitter:description" content="事件分发是Android中非常重要的机制，是用户与界面交互的基础。这篇文章将通过示例打印出的Log，绘制出事件分发的流程图，让大家更容易的去理解Android的事件分发机制。
@@ -145,7 +145,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/08/15/11、TouchEvent/"/>
+  <link rel="canonical" href="http://www.idtkm.com/2016/08/15/11、TouchEvent/"/>
 
 
 
@@ -286,7 +286,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/08/15/11、TouchEvent/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2016/08/15/11、TouchEvent/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -434,7 +434,7 @@
 </ul>
 <p><br></p>
 <a id="more"></a>
-<h3 id="2、相关事件"><a href="#2、相关事件" class="headerlink" title="2、相关事件"></a>2、相关事件</h3><p>这篇文章中我们只考虑4种触摸事件: ACTION_DOWN、ACTION_UP、ACTION_MOVE、ACTION_CANAL。<br><br>事件序列:一个事件序列是指从手指触摸屏幕开始，到手指离开屏幕结束，这个过程中产生的一系列事件。一个事件序列以ACTION_DOWN事件开始，中间可能经过若干个MOVE，以ACTION_UP事件结束。<br><br>接下来我们将使用之前的文章<a href="http://www.idtkm.com/customview/customview8/" target="_blank" rel="external">自定义View——弹性滑动</a>中例子来作为本文的示例，简单增加一些代码即可，修改之后的代码<a href="https://github.com/Idtk/Blog/tree/master/Code/11" target="_blank" rel="external">请点击查看</a>。<br></p>
+<h3 id="2、相关事件"><a href="#2、相关事件" class="headerlink" title="2、相关事件"></a>2、相关事件</h3><p>这篇文章中我们只考虑4种触摸事件: ACTION_DOWN、ACTION_UP、ACTION_MOVE、ACTION_CANAL。<br><br>事件序列:一个事件序列是指从手指触摸屏幕开始，到手指离开屏幕结束，这个过程中产生的一系列事件。一个事件序列以ACTION_DOWN事件开始，中间可能经过若干个MOVE，以ACTION_UP事件结束。<br><br>接下来我们将使用之前的文章<a href="http://www.idtkm.com/customview/customview8/">自定义View——弹性滑动</a>中例子来作为本文的示例，简单增加一些代码即可，修改之后的代码<a href="https://github.com/Idtk/Blog/tree/master/Code/11" target="_blank" rel="external">请点击查看</a>。<br></p>
 <h2 id="二、示例的默认情况"><a href="#二、示例的默认情况" class="headerlink" title="二、示例的默认情况"></a>二、示例的默认情况</h2><p>我们可以从示例代码的xml中看出，图片都是可点击的。<br></p>
 <figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line">&lt;?xml version="1.0" encoding="utf-8"?&gt;</div><div class="line">&lt;com.idtk.customscroll.ParentView</div><div class="line">    xmlns:android="http://schemas.android.com/apk/res/android"</div><div class="line">    xmlns:tools="http://schemas.android.com/tools"</div><div class="line">    android:layout_width="match_parent"</div><div class="line">    android:layout_height="match_parent"</div><div class="line">    android:padding="10dp"</div><div class="line">    tools:context="com.idtk.customscroll.MainActivity"</div><div class="line">    &gt;</div><div class="line"></div><div class="line">    &lt;com.idtk.customscroll.ChildView</div><div class="line">        android:layout_width="match_parent"</div><div class="line">        android:layout_height="match_parent"</div><div class="line">        android:src="@drawable/zhiqinchun"</div><div class="line">        android:clickable="true"/&gt;</div><div class="line"></div><div class="line">    &lt;com.idtk.customscroll.ChildView</div><div class="line">        android:layout_width="wrap_content"</div><div class="line">        android:layout_height="wrap_content"</div><div class="line">        android:src="@drawable/hanzhan"</div><div class="line">        android:clickable="true"/&gt;</div><div class="line"></div><div class="line">    &lt;com.idtk.customscroll.ChildView</div><div class="line">        android:layout_width="match_parent"</div><div class="line">        android:layout_height="match_parent"</div><div class="line">        android:src="@drawable/shengui"</div><div class="line">        android:clickable="true"/&gt;</div><div class="line"></div><div class="line">    &lt;com.idtk.customscroll.ChildView</div><div class="line">        android:layout_width="match_parent"</div><div class="line">        android:layout_height="match_parent"</div><div class="line">        android:src="@drawable/dayu"</div><div class="line">        android:clickable="true"/&gt;</div><div class="line"></div><div class="line">&lt;/com.idtk.customscroll.ParentView&gt;</div></pre></td></tr></table></figure>
 <p>我们现在来点击一下，查看下打印出的日志。<br><br><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/old/onTouchTrue.png" alt="onTouchTrue" title="onTouchTrue"><br><br></p>
@@ -560,6 +560,27 @@
     <div>
       
         
+<div class="my_post_copyright">
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+  <!-- JS库 sweetalert 可修改路径 -->
+  <script type="text/javascript" src="http://jslibs.wuxubj.cn/sweetalert_mini/jquery-1.7.1.min.js"></script>
+  <script src="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.mini.css">
+  <p><span>文章作者:</span><a href="/" title="访问 Idtk 的个人博客">Idtk</a></p>
+  <p><span>本文标题:</span><a href="/2016/08/15/11、TouchEvent/">更简单的学习Android事件分发</a></p>
+  <!-- http://www.idtkm.com/2016/08/15/11、TouchEvent/ -->
+  <p><span>原始链接:</span><a href="/2016/08/15/11、TouchEvent/" title="更简单的学习Android事件分发">http://www.idtkm.com/2016/08/15/11、TouchEvent/</a></p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
 
       
     </div>
@@ -573,13 +594,6 @@
 
 
     <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/CustomView/" rel="tag"># CustomView</a>
-          
-        </div>
-      
 
       
         
@@ -680,7 +694,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-count">21</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -698,7 +712,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -810,6 +824,11 @@
     NexT.Mist
   </a>
 </div>
+
+
+
+
+
 
 
         

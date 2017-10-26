@@ -4,9 +4,9 @@
   
   <link href="/atom.xml" rel="self"/>
   
-  <link href="http://yoursite.com/"/>
-  <updated>2017-07-09T06:31:12.036Z</updated>
-  <id>http://yoursite.com/</id>
+  <link href="http://www.idtkm.com/"/>
+  <updated>2017-10-26T15:23:00.342Z</updated>
+  <id>http://www.idtkm.com/</id>
   
   <author>
     <name>Idtk</name>
@@ -16,11 +16,81 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>Retrofit2 + OkHttp3 配置及Interceptor原理</title>
+    <link href="http://www.idtkm.com/2017/10/26/Retrofit2%20&amp;%20OkHttp3%20Interceptor/"/>
+    <id>http://www.idtkm.com/2017/10/26/Retrofit2 &amp; OkHttp3 Interceptor/</id>
+    <published>2017-10-26T15:00:00.000Z</published>
+    <updated>2017-10-26T15:23:00.342Z</updated>
+    
+    <content type="html"><![CDATA[<p>前段时间在给公司的新app做一些基础模块的封装，把Http模块中的一些基础配置，比如设置链接超时、Http Log Interceptor、Access Token Interceptor、Status Code Interceptor，以及Json转换、RxJava适配等设置做一下分享，再简单说说OkHttp Interceptor原理。</p>
+<h2 id="基本配置"><a href="#基本配置" class="headerlink" title="基本配置"></a>基本配置</h2><h3 id="OkHttp配置"><a href="#OkHttp配置" class="headerlink" title="OkHttp配置"></a>OkHttp配置</h3><p>OkHttp主要采用Builder模式进行配置</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">HttpLoggingInterceptor.Logger CUSTOM = <span class="keyword">new</span> HttpLoggingInterceptor.Logger() &#123;</div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">log</span><span class="params">(String message)</span> </span>&#123;</div><div class="line">        Platform.get().log(INFO, <span class="string">"OkHttp-idtk： "</span> + message, <span class="keyword">null</span>);</div><div class="line">    &#125;</div><div class="line">&#125;;</div><div class="line">HttpLoggingInterceptor loggingInterceptor = <span class="keyword">new</span> HttpLoggingInterceptor(CUSTOM);</div><div class="line">loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);</div><div class="line">OkHttpClient client = <span class="keyword">new</span> OkHttpClient.Builder()</div><div class="line">        .readTimeout(<span class="number">5</span>, TimeUnit.SECONDS)</div><div class="line">        .writeTimeout(<span class="number">5</span>, TimeUnit.SECONDS)</div><div class="line">        .connectTimeout(<span class="number">15</span>, TimeUnit.SECONDS)</div><div class="line">        .retryOnConnectionFailure(<span class="keyword">true</span>)</div><div class="line">        .addInterceptor(statusInterceptor)</div><div class="line">        .addInterceptor(loggingInterceptor)</div><div class="line">        .addNetworkInterceptor(tokenInterceptor)</div><div class="line">        .build();</div></pre></td></tr></table></figure>
+<ul>
+<li>retryOnConnectionFailure设置为true，表示请求失败后将会重连。</li>
+<li>HttpLoggingInterceptor用于拦截网络请求和响应，并输出Log，我在输出log的标识方面稍微修改了一下，便于使用时的区别。等级分为NONE/BASIC/HEADERS/BODY，其中BODY打印出的最为详细。</li>
+<li>addInterceptor与addNetworkInterceptor都是增加OkHttp的网络请求拦截器，但是其中是有一定区别的，前者是添加在与服务器连接之前和之后，后者是添加在与服务器建立连接和发起请求的之间。</li>
+<li>tokenInterceptor 是用来设置的token的拦截器，用于网络请求token的统一添加，具体内容会在接下来说明。</li>
+<li>statusInterceptor 用于响应返回状态码的处理，比如token过期、注册码无效等状态的处理。</li>
+</ul>
+<a id="more"></a>
+<h4 id="token拦截器"><a href="#token拦截器" class="headerlink" title="token拦截器"></a>token拦截器</h4><p>让所有网络请求都添加上token</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> Response <span class="title">intercept</span><span class="params">(Chain chain)</span> <span class="keyword">throws</span> IOException </span>&#123;</div><div class="line">    Request request = chain.request();</div><div class="line">    String url = request.url().toString();</div><div class="line">    <span class="keyword">if</span> (NetConfig.needAddToken(request)) &#123;</div><div class="line">        Uri uri = Uri.parse(url);</div><div class="line">        Set&lt;String&gt; oldParam = uri.getQueryParameterNames();</div><div class="line">        <span class="keyword">if</span> (!oldParam.contains(<span class="string">"token"</span>))&#123;</div><div class="line">            String token = getToken();</div><div class="line">            <span class="keyword">if</span> (oldParam.size() &gt;<span class="number">0</span>)&#123;</div><div class="line">                url += <span class="string">"&amp;token="</span> + token;</div><div class="line">            &#125;<span class="keyword">else</span> &#123;</div><div class="line">                url += <span class="string">"?token="</span> +token;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        request = request.newBuilder().url(url).build();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> chain.proceed(request);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>对于登录请求等情况，是不需要添加token的，所以在needAddToken方法中进行了判断。</li>
+<li>我这里后台的要求是把token放在url中，所以我进行了如上的写法，你也可以根据自己的需求进行修改。</li>
+</ul>
+<h4 id="状态码拦截"><a href="#状态码拦截" class="headerlink" title="状态码拦截"></a>状态码拦截</h4><p>对于后台定义的各种状态码进行处理</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> Response <span class="title">intercept</span><span class="params">(Chain chain)</span> <span class="keyword">throws</span> IOException </span>&#123;</div><div class="line">    Request request = chain.request();</div><div class="line">    Response response = chain.proceed(request);</div><div class="line">    BaseResult data = <span class="keyword">new</span> Gson().fromJson(response.body().string(), BaseResult.class);</div><div class="line">    <span class="keyword">if</span> (data == <span class="keyword">null</span>) &#123;</div><div class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"返回数据结构不合法： "</span> + response.body().string());</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">int</span> status = data.status;</div><div class="line">    <span class="keyword">switch</span> (status)&#123;</div><div class="line">        <span class="keyword">case</span> NetConfig.TOKEN:</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> TokenException(data.msg);</div><div class="line">        <span class="keyword">case</span> NetConfig.REGISTER_CODE:</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RegisterException(data.msg);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> response;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BaseResult</span> </span>&#123;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">int</span> status;</div><div class="line">    <span class="keyword">public</span> String msg;</div><div class="line">    <span class="keyword">public</span> JsonElement data;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>BaseResult是根据与后台的协定设置的，这里首先对data是否为null进行了检测。</li>
+<li>在获取状态码之后，对其进行token失效和注册码失效的检测，这里处理抛出异常，之后可以在使用时的基类进行统一处理。当然你也可以使用接口等别的方式进行处理。</li>
+</ul>
+<h3 id="Retrofit配置"><a href="#Retrofit配置" class="headerlink" title="Retrofit配置"></a>Retrofit配置</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">retrofit = <span class="keyword">new</span> Retrofit.Builder()</div><div class="line">        .client(buildClient())</div><div class="line">        .addConverterFactory(GsonConverterFactory.create())</div><div class="line">        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())</div><div class="line">        .baseUrl(baseUrl)</div><div class="line">        .build();</div></pre></td></tr></table></figure>
+<ul>
+<li>addConverterFactory  添加Gson转换器</li>
+<li>addCallAdapterFactory  添加Rxjava2适配器</li>
+</ul>
+<h2 id="拦截器原理"><a href="#拦截器原理" class="headerlink" title="拦截器原理"></a>拦截器原理</h2><p>因为之前写过<a href="http://www.idtkm.com/2017/04/27/Retrofit/">文章</a>分析，所以这里便不再赘述，而对于OkHttp，现在来简单说说其拦截器原理。</p>
+<p>OkHttp的使用我想大家都知道，在调用<code>client.newCall(request)</code>将会调用到<code>RealCall.newRealCall(this, request, false);</code>方法，之后将会调用到<code>RealCall.getResponseWithInterceptorChain()</code>函数，而在其中将进行拦截器链的构建。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="function">Response <span class="title">getResponseWithInterceptorChain</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</div><div class="line">  <span class="comment">// Build a full stack of interceptors.</span></div><div class="line">  List&lt;Interceptor&gt; interceptors = <span class="keyword">new</span> ArrayList&lt;&gt;();</div><div class="line">  <span class="comment">// client中配置的interceptors</span></div><div class="line">  interceptors.addAll(client.interceptors());</div><div class="line">  <span class="comment">// 重定向与失败重试</span></div><div class="line">  interceptors.add(retryAndFollowUpInterceptor);</div><div class="line">  <span class="comment">// 用户的请求头处理，响应处理</span></div><div class="line">  <span class="comment">// (Cookie持久性策略)</span></div><div class="line">  interceptors.add(<span class="keyword">new</span> BridgeInterceptor(client.cookieJar()));</div><div class="line">  <span class="comment">// 缓存请求、响应缓存的写入 (客户端设置的缓存策略)</span></div><div class="line">  interceptors.add(<span class="keyword">new</span> CacheInterceptor(client.internalCache()));</div><div class="line">  <span class="comment">// 与服务器建立连接</span></div><div class="line">  interceptors.add(<span class="keyword">new</span> ConnectInterceptor(client));</div><div class="line">  <span class="keyword">if</span> (!forWebSocket) &#123;</div><div class="line">    <span class="comment">// client配置的networkInterceptors，用于观察请求和响应</span></div><div class="line">    interceptors.addAll(client.networkInterceptors());</div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 发送请求，读取服务器的响应</span></div><div class="line">  interceptors.add(<span class="keyword">new</span> CallServerInterceptor(forWebSocket));</div><div class="line">  <span class="comment">// 设置完整的OkHttp拦截链</span></div><div class="line">  Interceptor.Chain chain = <span class="keyword">new</span> RealInterceptorChain(</div><div class="line">      interceptors, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="number">0</span>, originalRequest);</div><div class="line">  <span class="comment">// 调用链中的下一个拦截器，在这里是开始调用第一个拦截器</span></div><div class="line">  <span class="keyword">return</span> chain.proceed(originalRequest);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看出拦截器列表是从interceptors开始添加的，也就是之前说的HttpLoggingInterceptor、StatusInterceptor，之后添加重定向、cookie、缓存、连接建立的拦截器，然后添加上networkInterceptors，也就是我们之前说的TokenInterceptor，最后通过RealInterceptorChain调用proceed接口启动拦截器。</p>
+<p>如果你查看上面各个拦截器的源码，包括我上面自定义的三个拦截器，你会发现其中几乎都使用了<code>chain.proceed</code>方法来生成response，当然CallServerInterceptor其中并没有这个方法，因为它是真正使用去进行请求的拦截器。根据这些我们就可以绘制出一个事件流在拦截其中的过程：</p>
+<p><img src="http://ompb0h8qq.bkt.clouddn.com/Retrofit2%20+%20OkHttp3%20Interceptor.png" alt="Interceptor" title="Interceptor"></p>
+<p>我们可以在<code>CallServerInterceptor</code>之前对request的header、url等参数进行检测和配置，比如我们自定义的TokenInterceptor，在<code>CallServerInterceptor</code>之后我们可以对response的code、body等进行检测和配置，比如我们之前定义的StatusInterceptor,而HttpLoggingInterceptor则是对request和response都进行检测和配置。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>当然Retrofit+OkHttp还有更多的属性配置，比如证书、Cookie等，但这些属性在网络请求中的实现都是在OkHttp Interceptor中进行的，感兴趣的同学建议阅读下源码。</p>
+<p>如果在阅读过程中，有任何疑问与问题，欢迎与我联系。<br><strong>博客:www.idtkm.com</strong><br><strong>GitHub:<a href="https://github.com/Idtk" target="_blank" rel="external">https://github.com/Idtk</a></strong><br><strong>微博:<a href="http://weibo.com/Idtk" target="_blank" rel="external">http://weibo.com/Idtk</a></strong><br><strong>邮箱:IdtkMa@gmail.com</strong></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;前段时间在给公司的新app做一些基础模块的封装，把Http模块中的一些基础配置，比如设置链接超时、Http Log Interceptor、Access Token Interceptor、Status Code Interceptor，以及Json转换、RxJava适配等设置做一下分享，再简单说说OkHttp Interceptor原理。&lt;/p&gt;
+&lt;h2 id=&quot;基本配置&quot;&gt;&lt;a href=&quot;#基本配置&quot; class=&quot;headerlink&quot; title=&quot;基本配置&quot;&gt;&lt;/a&gt;基本配置&lt;/h2&gt;&lt;h3 id=&quot;OkHttp配置&quot;&gt;&lt;a href=&quot;#OkHttp配置&quot; class=&quot;headerlink&quot; title=&quot;OkHttp配置&quot;&gt;&lt;/a&gt;OkHttp配置&lt;/h3&gt;&lt;p&gt;OkHttp主要采用Builder模式进行配置&lt;/p&gt;
+&lt;figure class=&quot;highlight java&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;2&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;3&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;4&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;5&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;6&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;7&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;8&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;9&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;10&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;11&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;12&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;13&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;14&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;15&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;16&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;17&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;HttpLoggingInterceptor.Logger CUSTOM = &lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; HttpLoggingInterceptor.Logger() &amp;#123;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;    &lt;span class=&quot;meta&quot;&gt;@Override&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;    &lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(String message)&lt;/span&gt; &lt;/span&gt;&amp;#123;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;        Platform.get().log(INFO, &lt;span class=&quot;string&quot;&gt;&quot;OkHttp-idtk： &quot;&lt;/span&gt; + message, &lt;span class=&quot;keyword&quot;&gt;null&lt;/span&gt;);&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;    &amp;#125;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;&amp;#125;;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;HttpLoggingInterceptor loggingInterceptor = &lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; HttpLoggingInterceptor(CUSTOM);&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;OkHttpClient client = &lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; OkHttpClient.Builder()&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;        .readTimeout(&lt;span class=&quot;number&quot;&gt;5&lt;/span&gt;, TimeUnit.SECONDS)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;        .writeTimeout(&lt;span class=&quot;number&quot;&gt;5&lt;/span&gt;, TimeUnit.SECONDS)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;        .connectTimeout(&lt;span class=&quot;number&quot;&gt;15&lt;/span&gt;, TimeUnit.SECONDS)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;        .retryOnConnectionFailure(&lt;span class=&quot;keyword&quot;&gt;true&lt;/span&gt;)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;        .addInterceptor(statusInterceptor)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;        .addInterceptor(loggingInterceptor)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;        .addNetworkInterceptor(tokenInterceptor)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;        .build();&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;ul&gt;
+&lt;li&gt;retryOnConnectionFailure设置为true，表示请求失败后将会重连。&lt;/li&gt;
+&lt;li&gt;HttpLoggingInterceptor用于拦截网络请求和响应，并输出Log，我在输出log的标识方面稍微修改了一下，便于使用时的区别。等级分为NONE/BASIC/HEADERS/BODY，其中BODY打印出的最为详细。&lt;/li&gt;
+&lt;li&gt;addInterceptor与addNetworkInterceptor都是增加OkHttp的网络请求拦截器，但是其中是有一定区别的，前者是添加在与服务器连接之前和之后，后者是添加在与服务器建立连接和发起请求的之间。&lt;/li&gt;
+&lt;li&gt;tokenInterceptor 是用来设置的token的拦截器，用于网络请求token的统一添加，具体内容会在接下来说明。&lt;/li&gt;
+&lt;li&gt;statusInterceptor 用于响应返回状态码的处理，比如token过期、注册码无效等状态的处理。&lt;/li&gt;
+&lt;/ul&gt;
+    
+    </summary>
+    
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
+    
+    
+      <category term="OkHttp" scheme="http://www.idtkm.com/tags/OkHttp/"/>
+    
+      <category term="Retrofit" scheme="http://www.idtkm.com/tags/Retrofit/"/>
+    
+  </entry>
+  
+  <entry>
     <title>令人惊喜的Kotlin特性</title>
-    <link href="http://yoursite.com/2017/07/09/Surprise%20Kotlin/"/>
-    <id>http://yoursite.com/2017/07/09/Surprise Kotlin/</id>
+    <link href="http://www.idtkm.com/2017/07/09/Surprise%20Kotlin/"/>
+    <id>http://www.idtkm.com/2017/07/09/Surprise Kotlin/</id>
     <published>2017-07-09T06:00:00.000Z</published>
-    <updated>2017-07-09T06:31:12.036Z</updated>
+    <updated>2017-10-15T15:54:37.083Z</updated>
     
     <content type="html"><![CDATA[<p>本文并不准备去详细说明Kotlin的AS配置以及基本的语法，而是介绍一下在使用过程中让我惊喜的Kotlin特性，希望让更多的人喜欢上这个语言。</p>
 <h2 id="和findViewById说再见"><a href="#和findViewById说再见" class="headerlink" title="和findViewById说再见"></a>和findViewById说再见</h2><p>第一个要说的应该是很多已经使用了kotlin的同学都体会到的特性。</p>
@@ -80,19 +150,19 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="Kotlin" scheme="http://yoursite.com/tags/Kotlin/"/>
+      <category term="Kotlin" scheme="http://www.idtkm.com/tags/Kotlin/"/>
     
   </entry>
   
   <entry>
     <title>Retrofit源码分析</title>
-    <link href="http://yoursite.com/2017/04/27/Retrofit/"/>
-    <id>http://yoursite.com/2017/04/27/Retrofit/</id>
+    <link href="http://www.idtkm.com/2017/04/27/Retrofit/"/>
+    <id>http://www.idtkm.com/2017/04/27/Retrofit/</id>
     <published>2017-04-27T12:00:00.000Z</published>
-    <updated>2017-05-02T12:40:38.306Z</updated>
+    <updated>2017-10-15T16:00:27.180Z</updated>
     
     <content type="html"><![CDATA[<p>源码的分析将从基本的使用方法入手，分析retrofit的实现方案，以及其中涉及到的一些有趣的技巧。并且建议大家也去github下载一份源码，跟着本文理一遍基本的流程。</p>
 <h2 id="简单使用"><a href="#简单使用" class="headerlink" title="简单使用"></a>简单使用</h2><h3 id="定义HTTP-API"><a href="#定义HTTP-API" class="headerlink" title="定义HTTP API"></a>定义HTTP API</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">GitHubService</span> </span>&#123;</div><div class="line">  <span class="meta">@GET</span>(<span class="string">"users/&#123;user&#125;/repos"</span>)</div><div class="line">  Call&lt;List&lt;Repo&gt;&gt; listRepos(<span class="meta">@Path</span>(<span class="string">"user"</span>) String user);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
@@ -159,19 +229,19 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="Source Analysis" scheme="http://yoursite.com/tags/Source-Analysis/"/>
+      <category term="Source Analysis" scheme="http://www.idtkm.com/tags/Source-Analysis/"/>
     
   </entry>
   
   <entry>
     <title>RecyclerView缓存分析</title>
-    <link href="http://yoursite.com/2017/04/20/RecyclerView.Recycler/"/>
-    <id>http://yoursite.com/2017/04/20/RecyclerView.Recycler/</id>
+    <link href="http://www.idtkm.com/2017/04/20/RecyclerView.Recycler/"/>
+    <id>http://www.idtkm.com/2017/04/20/RecyclerView.Recycler/</id>
     <published>2017-04-19T16:00:00.000Z</published>
-    <updated>2017-04-20T11:54:38.080Z</updated>
+    <updated>2017-10-15T16:00:33.542Z</updated>
     
     <content type="html"><![CDATA[<p>&nbsp;&nbsp;&nbsp;&nbsp;本文将对RecyclerView的缓存机制进行分析。源码基于recyclerview-v7-25</p>
 <h1 id="缓存介绍"><a href="#缓存介绍" class="headerlink" title="缓存介绍"></a>缓存介绍</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">Recycler</span> </span>&#123;</div><div class="line">        <span class="keyword">final</span> ArrayList&lt;ViewHolder&gt; mAttachedScrap = <span class="keyword">new</span> ArrayList&lt;&gt;();</div><div class="line">        ArrayList&lt;ViewHolder&gt; mChangedScrap = <span class="keyword">null</span>;</div><div class="line"></div><div class="line">        <span class="keyword">final</span> ArrayList&lt;ViewHolder&gt; mCachedViews = <span class="keyword">new</span> ArrayList&lt;ViewHolder&gt;();</div><div class="line">		<span class="comment">// mAttachedScrap的不可变视图</span></div><div class="line">        <span class="keyword">private</span> <span class="keyword">final</span> List&lt;ViewHolder&gt;</div><div class="line">                mUnmodifiableAttachedScrap = Collections.unmodifiableList(mAttachedScrap);</div><div class="line">		<span class="comment">// 预缓存数，设置后会相应更新mViewCacheMax的值</span></div><div class="line">        <span class="keyword">private</span> <span class="keyword">int</span> mRequestedCacheMax = DEFAULT_CACHE_SIZE;</div><div class="line">		<span class="comment">// 最大缓存数</span></div><div class="line">        <span class="keyword">int</span> mViewCacheMax = DEFAULT_CACHE_SIZE;</div><div class="line"></div><div class="line">        RecycledViewPool mRecyclerPool;</div><div class="line"></div><div class="line">        <span class="keyword">private</span> ViewCacheExtension mViewCacheExtension;</div><div class="line"></div><div class="line">        <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> DEFAULT_CACHE_SIZE = <span class="number">2</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
@@ -198,19 +268,19 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="RecyclerView" scheme="http://yoursite.com/tags/RecyclerView/"/>
+      <category term="RecyclerView" scheme="http://www.idtkm.com/tags/RecyclerView/"/>
     
   </entry>
   
   <entry>
     <title>自定义九宫格控件（附源码地址）</title>
-    <link href="http://yoursite.com/2017/03/19/NinePhotoView/"/>
-    <id>http://yoursite.com/2017/03/19/NinePhotoView/</id>
+    <link href="http://www.idtkm.com/2017/03/19/NinePhotoView/"/>
+    <id>http://www.idtkm.com/2017/03/19/NinePhotoView/</id>
     <published>2017-03-19T12:48:00.000Z</published>
-    <updated>2017-03-19T13:31:31.162Z</updated>
+    <updated>2017-10-15T16:00:45.865Z</updated>
     
     <content type="html"><![CDATA[<p>&nbsp;&nbsp;&nbsp;&nbsp;在阅读本文之前，需要你对View的绘制有一定的了解，如果不了解的可以 看下我之前的文章——<a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a><br></p>
 <p>最近公司在做个类似朋友圈的功能，需要一个九宫格控件，因为算是个常用控件，所以自己撸了一个。<br></p>
@@ -245,19 +315,19 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="CustomView" scheme="http://yoursite.com/tags/CustomView/"/>
+      <category term="CustomView" scheme="http://www.idtkm.com/tags/CustomView/"/>
     
   </entry>
   
   <entry>
     <title>RecyclerView绘制流程的简单分析</title>
-    <link href="http://yoursite.com/2017/03/06/RecyclerView.LayoutManager/"/>
-    <id>http://yoursite.com/2017/03/06/RecyclerView.LayoutManager/</id>
+    <link href="http://www.idtkm.com/2017/03/06/RecyclerView.LayoutManager/"/>
+    <id>http://www.idtkm.com/2017/03/06/RecyclerView.LayoutManager/</id>
     <published>2017-03-05T16:00:00.000Z</published>
-    <updated>2017-03-12T13:09:39.019Z</updated>
+    <updated>2017-10-15T16:00:39.553Z</updated>
     
     <content type="html"><![CDATA[<p>&nbsp;&nbsp;&nbsp;&nbsp;本文将简单分析下RecyclerView的绘制流程。既然是一个View，就从<code>onMeasure</code>开始。</p>
 <h2 id="onMeasure"><a href="#onMeasure" class="headerlink" title="onMeasure"></a>onMeasure</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onMeasure</span><span class="params">(<span class="keyword">int</span> widthSpec, <span class="keyword">int</span> heightSpec)</span> </span>&#123;</div><div class="line">	<span class="keyword">if</span> (mLayout.mAutoMeasure) &#123;</div><div class="line">		<span class="keyword">final</span> <span class="keyword">int</span> widthMode = MeasureSpec.getMode(widthSpec);</div><div class="line">		<span class="keyword">final</span> <span class="keyword">int</span> heightMode = MeasureSpec.getMode(heightSpec);</div><div class="line">		<span class="keyword">final</span> <span class="keyword">boolean</span> skipMeasure = widthMode == MeasureSpec.EXACTLY</div><div class="line">				&amp;&amp; heightMode == MeasureSpec.EXACTLY;</div><div class="line"></div><div class="line">		mLayout.onMeasure(mRecycler, mState, widthSpec, heightSpec);</div><div class="line"></div><div class="line">		<span class="keyword">if</span> (mState.mLayoutStep == State.STEP_START) &#123;</div><div class="line">			dispatchLayoutStep1();</div><div class="line">		&#125;</div><div class="line"></div><div class="line">		mLayout.setMeasureSpecs(widthSpec, heightSpec);</div><div class="line"></div><div class="line">		dispatchLayoutStep2();</div><div class="line"></div><div class="line">		mLayout.setMeasuredDimensionFromChildren(widthSpec, heightSpec);</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
@@ -287,19 +357,19 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="RecyclerView" scheme="http://yoursite.com/tags/RecyclerView/"/>
+      <category term="RecyclerView" scheme="http://www.idtkm.com/tags/RecyclerView/"/>
     
   </entry>
   
   <entry>
     <title>属性动画连续输出值分析</title>
-    <link href="http://yoursite.com/2016/11/10/F1%E3%80%81Property%20Animation/"/>
-    <id>http://yoursite.com/2016/11/10/F1、Property Animation/</id>
+    <link href="http://www.idtkm.com/2016/11/10/F1%E3%80%81Property%20Animation/"/>
+    <id>http://www.idtkm.com/2016/11/10/F1、Property Animation/</id>
     <published>2016-11-09T16:00:00.000Z</published>
-    <updated>2017-03-12T13:12:09.402Z</updated>
+    <updated>2017-10-15T16:00:53.461Z</updated>
     
     <content type="html"><![CDATA[<p>大家在开发过程中，经常会使用到属性动画，这里以ValueAnimator为例，它可以通过addUpdateListener来监听输出的数值，就像这样 :<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> ValueAnimator animator;</div><div class="line"><span class="keyword">private</span> <span class="keyword">float</span> animatedValue;</div><div class="line"><span class="keyword">private</span> TimeInterpolator timeInterpolator = <span class="keyword">new</span> DecelerateInterpolator();</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initAnimator</span><span class="params">(<span class="keyword">long</span> duration)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (animator != <span class="keyword">null</span> &amp;&amp; animator.isRunning()) &#123;</div><div class="line">        animator.cancel();</div><div class="line">        animator.start();</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        animator = ValueAnimator.ofFloat(<span class="number">0</span>, <span class="number">1000</span>).setDuration(duration);</div><div class="line">        animator.setInterpolator(timeInterpolator);</div><div class="line">        animator.addUpdateListener(<span class="keyword">new</span> ValueAnimator.AnimatorUpdateListener() &#123;</div><div class="line">            <span class="meta">@Override</span></div><div class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onAnimationUpdate</span><span class="params">(ValueAnimator animation)</span> </span>&#123;</div><div class="line">                animatedValue = (<span class="keyword">float</span>) animation.getAnimatedValue();</div><div class="line">                now = SystemClock.elapsedRealtime();</div><div class="line">                diff = now - preNow;</div><div class="line">                preNow = now;</div><div class="line">                Log.d(<span class="string">"animator"</span>, <span class="string">"animatedValue: "</span> + animatedValue + <span class="string">" now: "</span> + now + <span class="string">" diff: "</span> + diff);</div><div class="line">            &#125;</div><div class="line">        &#125;);</div><div class="line">        animator.start();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>其输出值animatedValue是一个随时间变化的连续数值，就像这样 :</p>
@@ -362,19 +432,19 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="Animator" scheme="http://yoursite.com/tags/Animator/"/>
+      <category term="Animator" scheme="http://www.idtkm.com/tags/Animator/"/>
     
   </entry>
   
   <entry>
     <title>Matrix原理</title>
-    <link href="http://yoursite.com/2016/10/09/14%E3%80%81Matrix/"/>
-    <id>http://yoursite.com/2016/10/09/14、Matrix/</id>
+    <link href="http://www.idtkm.com/2016/10/09/14%E3%80%81Matrix/"/>
+    <id>http://www.idtkm.com/2016/10/09/14、Matrix/</id>
     <published>2016-10-08T16:00:00.000Z</published>
-    <updated>2017-03-12T13:39:05.822Z</updated>
+    <updated>2017-10-15T16:01:01.572Z</updated>
     
     <content type="html"><![CDATA[<p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
 <h2 id="一、Matrix结构"><a href="#一、Matrix结构" class="headerlink" title="一、Matrix结构"></a>一、Matrix结构</h2><p>在Android开发中，矩阵是一个非常强大且有趣的工具，在之前的一篇文章中对ColorMatrix的原理进行了详细的分析，用其实现了一些简单的颜色过滤功能，这一次我们来探寻一下同样强大的Matrix，它具有更改图像图形的有趣功能。我们先来看看Matrix的结构。</p>
@@ -432,7 +502,7 @@
 <p>根据这个规则，也就解释了我们在使用过程中修改<code>MPERSP_2</code>参数时，图像会发生的类似缩放的效果，其实就是透视变换的效果。<br></p>
 <h3 id="使用示例-5"><a href="#使用示例-5" class="headerlink" title="使用示例"></a>使用示例</h3><p>现在我们使用<code>Matrix</code>自带的<code>setValues</code>方法 :<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> *  测试的Matrix操作</div><div class="line"> */</div><div class="line">mMatrix.setValues(<span class="keyword">new</span> <span class="keyword">float</span>[]&#123;<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1.5f</span>&#125;);</div><div class="line">Log.d(<span class="string">"TAG"</span>,mMatrix.toString());</div><div class="line"></div><div class="line"><span class="comment">// Log</span></div><div class="line">D/TAG: Matrix&#123;[<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>][<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>][<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.5</span>]&#125;</div></pre></td></tr></table></figure></p>
 <p><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/14/Matix5.png" alt="Matix" title="Matix"><br><br></p>
-<h2 id="三、Matrix前乘与后乘"><a href="#三、Matrix前乘与后乘" class="headerlink" title="三、Matrix前乘与后乘"></a>三、Matrix前乘与后乘</h2><p>Matrix前乘与后乘的情况跟我在之前的文章<a href="http://www.idtkm.com/customview/cutomview13/" target="_blank" rel="external">ColorMatrix详解</a>中<strong>ColorMatrix相乘</strong>章节所描述的基本相同。<br></p>
+<h2 id="三、Matrix前乘与后乘"><a href="#三、Matrix前乘与后乘" class="headerlink" title="三、Matrix前乘与后乘"></a>三、Matrix前乘与后乘</h2><p>Matrix前乘与后乘的情况跟我在之前的文章<a href="http://www.idtkm.com/customview/cutomview13/">ColorMatrix详解</a>中<strong>ColorMatrix相乘</strong>章节所描述的基本相同。<br></p>
 <h3 id="前乘"><a href="#前乘" class="headerlink" title="前乘"></a>前乘</h3><p>前乘相当于，当前矩阵乘以输入的矩阵<img src="http://latex.codecogs.com/png.latex?$$%20M&#39;%20=%20M%20\cdot%20S%20$$" alt=""><br></p>
 <p>示例如下:</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mMatrix.reset();</div><div class="line">mMatrix.preScale(sx,sy);</div><div class="line">mMatrix.preTranslate(tx,ty);</div></pre></td></tr></table></figure>
@@ -452,19 +522,19 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="CustomView" scheme="http://yoursite.com/tags/CustomView/"/>
+      <category term="CustomView" scheme="http://www.idtkm.com/tags/CustomView/"/>
     
   </entry>
   
   <entry>
     <title>ColorMatrix详解</title>
-    <link href="http://yoursite.com/2016/09/18/13%E3%80%81ColorMatrix/"/>
-    <id>http://yoursite.com/2016/09/18/13、ColorMatrix/</id>
+    <link href="http://www.idtkm.com/2016/09/18/13%E3%80%81ColorMatrix/"/>
+    <id>http://www.idtkm.com/2016/09/18/13、ColorMatrix/</id>
     <published>2016-09-17T16:00:00.000Z</published>
-    <updated>2017-03-12T13:48:39.341Z</updated>
+    <updated>2017-10-15T16:01:08.748Z</updated>
     
     <content type="html"><![CDATA[<p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
 <p><strong>涉及方法</strong><br></p>
@@ -649,21 +719,21 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="CustomView" scheme="http://yoursite.com/tags/CustomView/"/>
+      <category term="CustomView" scheme="http://www.idtkm.com/tags/CustomView/"/>
     
   </entry>
   
   <entry>
     <title>Android事件分发机制源码解析</title>
-    <link href="http://yoursite.com/2016/08/21/12%E3%80%81TouchEventSource/"/>
-    <id>http://yoursite.com/2016/08/21/12、TouchEventSource/</id>
+    <link href="http://www.idtkm.com/2016/08/21/12%E3%80%81TouchEventSource/"/>
+    <id>http://www.idtkm.com/2016/08/21/12、TouchEventSource/</id>
     <published>2016-08-20T16:00:00.000Z</published>
-    <updated>2017-03-12T13:07:14.266Z</updated>
+    <updated>2017-10-15T16:01:15.204Z</updated>
     
-    <content type="html"><![CDATA[<p>在<a href="http://www.idtkm.com/customview/customview11/" target="_blank" rel="external">更简单的学习Android事件分发</a>中，使用日志、比喻、流程图相结合的方式，以更简单的方法去分析了Android的事件分发机制。本篇文章将采用分析源码的方式，更深入的解析Android的事件分发机制。</p>
+    <content type="html"><![CDATA[<p>在<a href="http://www.idtkm.com/customview/customview11/">更简单的学习Android事件分发</a>中，使用日志、比喻、流程图相结合的方式，以更简单的方法去分析了Android的事件分发机制。本篇文章将采用分析源码的方式，更深入的解析Android的事件分发机制。</p>
 <p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
 <h2 id="一、从Activity开始"><a href="#一、从Activity开始" class="headerlink" title="一、从Activity开始"></a>一、从Activity开始</h2><p>Android的触摸事件，是由windowManagerService进行采集，之后传递到Activiy进行处理。我们这里从Activity#dispatchTouchEvent方法开始解析<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">dispatchTouchEvent</span><span class="params">(MotionEvent ev)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (ev.getAction() == MotionEvent.ACTION_DOWN) &#123;</div><div class="line">        onUserInteraction();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (getWindow().superDispatchTouchEvent(ev)) &#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> onTouchEvent(ev);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>上述代码中，<code>onUserInteraction()</code>是一个空的实现，我们直接来看下<br><code>getWindow().superDispatchTouchEvent(ev)</code>方法。window是一个抽象的方法，不过系统给它提供了一个实现类PhoneWindow，我们这里看下它的<code>superDispatchTouchEvent(ev)</code>方法。</p>
@@ -694,19 +764,19 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="CustomView" scheme="http://yoursite.com/tags/CustomView/"/>
+      <category term="CustomView" scheme="http://www.idtkm.com/tags/CustomView/"/>
     
   </entry>
   
   <entry>
     <title>更简单的学习Android事件分发</title>
-    <link href="http://yoursite.com/2016/08/15/11%E3%80%81TouchEvent/"/>
-    <id>http://yoursite.com/2016/08/15/11、TouchEvent/</id>
+    <link href="http://www.idtkm.com/2016/08/15/11%E3%80%81TouchEvent/"/>
+    <id>http://www.idtkm.com/2016/08/15/11、TouchEvent/</id>
     <published>2016-08-14T16:00:00.000Z</published>
-    <updated>2017-03-12T13:07:07.130Z</updated>
+    <updated>2017-10-15T16:01:22.179Z</updated>
     
     <content type="html"><![CDATA[<p>事件分发是Android中非常重要的机制，是用户与界面交互的基础。这篇文章将通过示例打印出的Log，绘制出事件分发的流程图，让大家更容易的去理解Android的事件分发机制。<br></p>
 <p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
@@ -752,7 +822,7 @@
 </ul>
 <p><br></p>
 <a id="more"></a>
-<h3 id="2、相关事件"><a href="#2、相关事件" class="headerlink" title="2、相关事件"></a>2、相关事件</h3><p>这篇文章中我们只考虑4种触摸事件: ACTION_DOWN、ACTION_UP、ACTION_MOVE、ACTION_CANAL。<br><br>事件序列:一个事件序列是指从手指触摸屏幕开始，到手指离开屏幕结束，这个过程中产生的一系列事件。一个事件序列以ACTION_DOWN事件开始，中间可能经过若干个MOVE，以ACTION_UP事件结束。<br><br>接下来我们将使用之前的文章<a href="http://www.idtkm.com/customview/customview8/" target="_blank" rel="external">自定义View——弹性滑动</a>中例子来作为本文的示例，简单增加一些代码即可，修改之后的代码<a href="https://github.com/Idtk/Blog/tree/master/Code/11" target="_blank" rel="external">请点击查看</a>。<br></p>
+<h3 id="2、相关事件"><a href="#2、相关事件" class="headerlink" title="2、相关事件"></a>2、相关事件</h3><p>这篇文章中我们只考虑4种触摸事件: ACTION_DOWN、ACTION_UP、ACTION_MOVE、ACTION_CANAL。<br><br>事件序列:一个事件序列是指从手指触摸屏幕开始，到手指离开屏幕结束，这个过程中产生的一系列事件。一个事件序列以ACTION_DOWN事件开始，中间可能经过若干个MOVE，以ACTION_UP事件结束。<br><br>接下来我们将使用之前的文章<a href="http://www.idtkm.com/customview/customview8/">自定义View——弹性滑动</a>中例子来作为本文的示例，简单增加一些代码即可，修改之后的代码<a href="https://github.com/Idtk/Blog/tree/master/Code/11" target="_blank" rel="external">请点击查看</a>。<br></p>
 <h2 id="二、示例的默认情况"><a href="#二、示例的默认情况" class="headerlink" title="二、示例的默认情况"></a>二、示例的默认情况</h2><p>我们可以从示例代码的xml中看出，图片都是可点击的。<br></p>
 <figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line">&lt;?xml version="1.0" encoding="utf-8"?&gt;</div><div class="line">&lt;com.idtk.customscroll.ParentView</div><div class="line">    xmlns:android="http://schemas.android.com/apk/res/android"</div><div class="line">    xmlns:tools="http://schemas.android.com/tools"</div><div class="line">    android:layout_width="match_parent"</div><div class="line">    android:layout_height="match_parent"</div><div class="line">    android:padding="10dp"</div><div class="line">    tools:context="com.idtk.customscroll.MainActivity"</div><div class="line">    &gt;</div><div class="line"></div><div class="line">    &lt;com.idtk.customscroll.ChildView</div><div class="line">        android:layout_width="match_parent"</div><div class="line">        android:layout_height="match_parent"</div><div class="line">        android:src="@drawable/zhiqinchun"</div><div class="line">        android:clickable="true"/&gt;</div><div class="line"></div><div class="line">    &lt;com.idtk.customscroll.ChildView</div><div class="line">        android:layout_width="wrap_content"</div><div class="line">        android:layout_height="wrap_content"</div><div class="line">        android:src="@drawable/hanzhan"</div><div class="line">        android:clickable="true"/&gt;</div><div class="line"></div><div class="line">    &lt;com.idtk.customscroll.ChildView</div><div class="line">        android:layout_width="match_parent"</div><div class="line">        android:layout_height="match_parent"</div><div class="line">        android:src="@drawable/shengui"</div><div class="line">        android:clickable="true"/&gt;</div><div class="line"></div><div class="line">    &lt;com.idtk.customscroll.ChildView</div><div class="line">        android:layout_width="match_parent"</div><div class="line">        android:layout_height="match_parent"</div><div class="line">        android:src="@drawable/dayu"</div><div class="line">        android:clickable="true"/&gt;</div><div class="line"></div><div class="line">&lt;/com.idtk.customscroll.ParentView&gt;</div></pre></td></tr></table></figure>
 <p>我们现在来点击一下，查看下打印出的日志。<br><br><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/old/onTouchTrue.png" alt="onTouchTrue" title="onTouchTrue"><br><br></p>
@@ -921,19 +991,19 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="CustomView" scheme="http://yoursite.com/tags/CustomView/"/>
+      <category term="CustomView" scheme="http://www.idtkm.com/tags/CustomView/"/>
     
   </entry>
   
   <entry>
     <title>View的requestLayout传递与测量、布局流程分析</title>
-    <link href="http://yoursite.com/2016/08/10/10%E3%80%81RequestLayout/"/>
-    <id>http://yoursite.com/2016/08/10/10、RequestLayout/</id>
+    <link href="http://www.idtkm.com/2016/08/10/10%E3%80%81RequestLayout/"/>
+    <id>http://www.idtkm.com/2016/08/10/10、RequestLayout/</id>
     <published>2016-08-09T16:00:00.000Z</published>
-    <updated>2017-03-12T13:07:00.315Z</updated>
+    <updated>2017-10-15T16:01:29.008Z</updated>
     
     <content type="html"><![CDATA[<p><strong>在之前的<a href="https://github.com/Idtk/Blog/blob/master/Blog/9%E3%80%81Invalidate.md" target="_blank" rel="external">invalidate传递与绘制流程分析</a>文章中我们对invalidate的流程进行了详细分析，现在来继续分析下requestLayout的流程吧</strong></p>
 <p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
@@ -1012,21 +1082,21 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="CustomView" scheme="http://yoursite.com/tags/CustomView/"/>
+      <category term="CustomView" scheme="http://www.idtkm.com/tags/CustomView/"/>
     
   </entry>
   
   <entry>
     <title>View的invalidate传递与绘制流程分析</title>
-    <link href="http://yoursite.com/2016/08/02/9%E3%80%81Invalidate/"/>
-    <id>http://yoursite.com/2016/08/02/9、Invalidate/</id>
+    <link href="http://www.idtkm.com/2016/08/02/9%E3%80%81Invalidate/"/>
+    <id>http://www.idtkm.com/2016/08/02/9、Invalidate/</id>
     <published>2016-08-01T16:00:00.000Z</published>
-    <updated>2017-03-12T13:06:43.597Z</updated>
+    <updated>2017-10-15T16:01:35.384Z</updated>
     
-    <content type="html"><![CDATA[<p><strong>上一篇文章<a href="http://www.idtkm.com/customview/customview8/" target="_blank" rel="external">自定义View——View的弹性滑动</a>中，我们对View的滑动进行了实战以及简单分析。但在文章的最后，仍然遗留了两个问题,第一个是invalidate与postInvalidate有什么区别呢？第二个是invalidate是如何调用computeScroll()方法的呢？这两个问题将在这一篇文章中进行分析。</strong></p>
+    <content type="html"><![CDATA[<p><strong>上一篇文章<a href="http://www.idtkm.com/customview/customview8/">自定义View——View的弹性滑动</a>中，我们对View的滑动进行了实战以及简单分析。但在文章的最后，仍然遗留了两个问题,第一个是invalidate与postInvalidate有什么区别呢？第二个是invalidate是如何调用computeScroll()方法的呢？这两个问题将在这一篇文章中进行分析。</strong></p>
 <p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
 <h2 id="一、invalidate与postInvalidate"><a href="#一、invalidate与postInvalidate" class="headerlink" title="一、invalidate与postInvalidate"></a>一、invalidate与postInvalidate</h2><p>invalidate与postInvadlidate都是用于请求View重绘的API，invalidate在主线程中进行调用，而postInvadlidate则在子线程中进行调用。<br><br>我们来分析下postInvadlidate的源码 :<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postInvalidate</span><span class="params">()</span> </span>&#123;</div><div class="line">    postInvalidateDelayed(<span class="number">0</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>postInvalidate()蒋会调用postInvalidateDelayed(0)方法，继续跟进。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postInvalidateDelayed</span><span class="params">(<span class="keyword">long</span> delayMilliseconds)</span> </span>&#123;</div><div class="line">    <span class="keyword">final</span> AttachInfo attachInfo = mAttachInfo;</div><div class="line">    <span class="keyword">if</span> (attachInfo != <span class="keyword">null</span>) &#123;</div><div class="line">        attachInfo.mViewRootImpl.dispatchInvalidateDelayed(<span class="keyword">this</span>, delayMilliseconds);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
@@ -1079,19 +1149,19 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="CustomView" scheme="http://yoursite.com/tags/CustomView/"/>
+      <category term="CustomView" scheme="http://www.idtkm.com/tags/CustomView/"/>
     
   </entry>
   
   <entry>
     <title>View的弹性滑动</title>
-    <link href="http://yoursite.com/2016/07/27/8%E3%80%81Scroll/"/>
-    <id>http://yoursite.com/2016/07/27/8、Scroll/</id>
+    <link href="http://www.idtkm.com/2016/07/27/8%E3%80%81Scroll/"/>
+    <id>http://www.idtkm.com/2016/07/27/8、Scroll/</id>
     <published>2016-07-26T16:00:00.000Z</published>
-    <updated>2017-03-13T11:31:47.923Z</updated>
+    <updated>2017-10-15T16:01:42.653Z</updated>
     
     <content type="html"><![CDATA[<p><strong>滑动是Android开发中非常重要的UI效果，几乎所有应用都包含了滑动效果，而本文将对滑动的使用以及原理进行介绍。</strong></p>
 <p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
@@ -1147,22 +1217,22 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="CustomView" scheme="http://yoursite.com/tags/CustomView/"/>
+      <category term="CustomView" scheme="http://www.idtkm.com/tags/CustomView/"/>
     
   </entry>
   
   <entry>
     <title>雷达图(蜘蛛网图)的实现</title>
-    <link href="http://yoursite.com/2016/07/01/7%E3%80%81RadarChart/"/>
-    <id>http://yoursite.com/2016/07/01/7、RadarChart/</id>
+    <link href="http://www.idtkm.com/2016/07/01/7%E3%80%81RadarChart/"/>
+    <id>http://www.idtkm.com/2016/07/01/7、RadarChart/</id>
     <published>2016-06-30T16:00:00.000Z</published>
-    <updated>2017-03-12T13:06:24.845Z</updated>
+    <updated>2017-10-15T16:01:51.378Z</updated>
     
     <content type="html"><![CDATA[<p>效果图:<br><br><img src="http://ompb0h8qq.bkt.clouddn.com/old/radar.png" alt="radar" title="radar" width="300"><br></p>
-<p>阅读本文前需了解View的绘制流程，画布操作，以及Path的常用方法，如果不熟悉，请先查看我之前的文章<a href="http://www.idtkm.com/customview/customview1/" target="_blank" rel="external">Android坐标系与View绘制流程</a>、<a href="http://www.idtkm.com/customview/customview2/" target="_blank" rel="external">Canvas与ValueAnimator</a>、<a href="http://www.idtkm.com/customview/customview4/" target="_blank" rel="external">Path图形与逻辑运算</a><br></p>
+<p>阅读本文前需了解View的绘制流程，画布操作，以及Path的常用方法，如果不熟悉，请先查看我之前的文章<a href="http://www.idtkm.com/customview/customview1/">Android坐标系与View绘制流程</a>、<a href="http://www.idtkm.com/customview/customview2/">Canvas与ValueAnimator</a>、<a href="http://www.idtkm.com/customview/customview4/">Path图形与逻辑运算</a><br></p>
 <p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
 <h2 id="一、获取View宽高以及cos、sin"><a href="#一、获取View宽高以及cos、sin" class="headerlink" title="一、获取View宽高以及cos、sin"></a>一、获取View宽高以及cos、sin</h2><p>在onSizeChanged函数中，可以获取当前View的宽高以及根据padding值计算出的实际绘制区域的宽高，同时计算出雷达图的半径设置并通过PathMeasure类的<strong>getPosTan</strong>方法获得此任意正多边形各角坐标的余弦值、正弦值。<br></p>
 <a id="more"></a>
@@ -1215,19 +1285,19 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="CustomView" scheme="http://yoursite.com/tags/CustomView/"/>
+      <category term="CustomView" scheme="http://www.idtkm.com/tags/CustomView/"/>
     
   </entry>
   
   <entry>
     <title>Path中的贝塞尔曲线</title>
-    <link href="http://yoursite.com/2016/06/21/6%E3%80%81Bezier/"/>
-    <id>http://yoursite.com/2016/06/21/6、Bezier/</id>
+    <link href="http://www.idtkm.com/2016/06/21/6%E3%80%81Bezier/"/>
+    <id>http://www.idtkm.com/2016/06/21/6、Bezier/</id>
     <published>2016-06-20T16:00:00.000Z</published>
-    <updated>2017-03-12T13:06:02.445Z</updated>
+    <updated>2017-10-15T16:02:06.322Z</updated>
     
     <content type="html"><![CDATA[<p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
 <h2 id="一、数学中的贝塞尔"><a href="#一、数学中的贝塞尔" class="headerlink" title="一、数学中的贝塞尔"></a>一、数学中的贝塞尔</h2><h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>贝塞尔曲线于1962年，由法国工程师皮埃尔·贝塞尔（Pierre Bézier）所广泛发表，他运用贝塞尔曲线来为汽车的主体进行设计。贝塞尔曲线最初由Paul de Casteljau于1959年运用de Casteljau算法开发，以稳定数值的方法求出贝塞尔曲线。<br><br>在计算机图形学中贝赛尔曲线的运用也很广泛，Photoshop中的钢笔效果，Flash5的贝塞尔曲线工具，在软件GUI开发中一般也会提供对应的方法来实现贝赛尔曲线。</p>
@@ -1283,33 +1353,33 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="CustomView" scheme="http://yoursite.com/tags/CustomView/"/>
+      <category term="CustomView" scheme="http://www.idtkm.com/tags/CustomView/"/>
     
   </entry>
   
   <entry>
     <title>PieChart扇形图的实现</title>
-    <link href="http://yoursite.com/2016/06/13/5%E3%80%81PieChart/"/>
-    <id>http://yoursite.com/2016/06/13/5、PieChart/</id>
+    <link href="http://www.idtkm.com/2016/06/13/5%E3%80%81PieChart/"/>
+    <id>http://www.idtkm.com/2016/06/13/5、PieChart/</id>
     <published>2016-06-12T16:00:00.000Z</published>
-    <updated>2017-03-12T13:04:58.811Z</updated>
+    <updated>2017-10-15T16:02:11.740Z</updated>
     
     <content type="html"><![CDATA[<p><img src="http://ompb0h8qq.bkt.clouddn.com/all/PieChart.gif" alt="PieChat" title="PieChat" width="300"><br></p>
-<p>(<strong>PS: 经过之前<a href="http://www.idtkm.com/category/customview/" target="_blank" rel="external">4篇博客</a>的基础知识学习，终于可以开始编写PieChart了 ~(≧▽≦)/~啦啦啦</strong>)</p>
+<p>(<strong>PS: 经过之前<a href="http://www.idtkm.com/category/customview/">4篇博客</a>的基础知识学习，终于可以开始编写PieChart了 ~(≧▽≦)/~啦啦啦</strong>)</p>
 <a id="more"></a>
 <p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
 <h2 id="一、数据需求"><a href="#一、数据需求" class="headerlink" title="一、数据需求"></a>一、数据需求</h2><p>来分析下，用户需要提供怎样的数据，首先要有数据的值，然后还需要对应的数据名称，以及颜色。绘制PieChart需要什么呢，由图可以看出，需要百分比值，扇形角度，色块颜色。所以总共属性有:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PieData</span> </span>&#123;</div><div class="line">    <span class="keyword">private</span> String name;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">float</span> value;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">float</span> percentage;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">int</span> color = <span class="number">0</span>;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">float</span> angle = <span class="number">0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>各属性的set与get请自行增加。</p>
 <h2 id="二、构造函数"><a href="#二、构造函数" class="headerlink" title="二、构造函数"></a>二、构造函数</h2><p>构造函数中，增加一些xml设置，创建一个attrs.xml<br><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">&lt;?xml version="1.0" encoding="utf-8"?&gt;</div><div class="line">&lt;resources&gt;</div><div class="line">    &lt;declare-styleable name="PieChart"&gt;</div><div class="line">        &lt;attr name="name" format="string"/&gt;</div><div class="line">        &lt;attr name="percentDecimal" format="integer"/&gt;</div><div class="line">        &lt;attr name="textSize" format="dimension"/&gt;</div><div class="line">    &lt;/declare-styleable&gt;</div><div class="line">&lt;/resources&gt;</div></pre></td></tr></table></figure></p>
 <p>这是只设置了一部分属性，如果你有强迫症希望全部设置的话，可以自行增加。在PieChart中使用TypedArray进行属性的获取。建议使用如下的写法，<strong>可以避免在没有设置属性时，也运行getXXX方法</strong>。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.PieChart, defStyleAttr,defStyleRes);</div><div class="line"><span class="keyword">int</span> n = array.getIndexCount();</div><div class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;n; i++)&#123;</div><div class="line">    <span class="keyword">int</span> attr = array.getIndex(i);</div><div class="line">    <span class="keyword">switch</span> (attr)&#123;</div><div class="line">        <span class="keyword">case</span> R.styleable.PieChart_name:</div><div class="line">            name = array.getString(attr);</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">case</span> R.styleable.PieChart_percentDecimal:</div><div class="line">            percentDecimal = array.getInt(attr,percentDecimal);</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">case</span> R.styleable.PieChart_textSize:</div><div class="line">            percentTextSize = array.getDimensionPixelSize(attr,percentTextSize);</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line">array.recycle();</div></pre></td></tr></table></figure></p>
-<h2 id="三、动画函数"><a href="#三、动画函数" class="headerlink" title="三、动画函数"></a>三、动画函数</h2><p>绘制一个完整的圆，旋转的角度为360，动画时间为可set参数，默认5秒，监听animatedValue参数，用于与绘制时进行计算。ValueAnimator类涉及到的参数的意义请查看<a href="http://www.idtkm.com/customview/customview2/" target="_blank" rel="external">自定义View——Canvas与ValueAnimator</a>文章。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initAnimator</span><span class="params">(<span class="keyword">long</span> duration)</span></span>&#123;</div><div class="line">    <span class="keyword">if</span> (animator !=<span class="keyword">null</span> &amp;&amp;animator.isRunning())&#123;</div><div class="line">        animator.cancel();</div><div class="line">        animator.start();</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        animator=ValueAnimator.ofFloat(<span class="number">0</span>,<span class="number">360</span>).setDuration(duration);</div><div class="line">        animator.setInterpolator(timeInterpolator);</div><div class="line">        animator.addUpdateListener(<span class="keyword">new</span> ValueAnimator.AnimatorUpdateListener() &#123;</div><div class="line">            <span class="meta">@Override</span></div><div class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onAnimationUpdate</span><span class="params">(ValueAnimator animation)</span> </span>&#123;</div><div class="line">                animatedValue = (<span class="keyword">float</span>) animation.getAnimatedValue();</div><div class="line">                invalidate();</div><div class="line">            &#125;</div><div class="line">        &#125;);</div><div class="line">        animator.start();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<h2 id="三、动画函数"><a href="#三、动画函数" class="headerlink" title="三、动画函数"></a>三、动画函数</h2><p>绘制一个完整的圆，旋转的角度为360，动画时间为可set参数，默认5秒，监听animatedValue参数，用于与绘制时进行计算。ValueAnimator类涉及到的参数的意义请查看<a href="http://www.idtkm.com/customview/customview2/">自定义View——Canvas与ValueAnimator</a>文章。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initAnimator</span><span class="params">(<span class="keyword">long</span> duration)</span></span>&#123;</div><div class="line">    <span class="keyword">if</span> (animator !=<span class="keyword">null</span> &amp;&amp;animator.isRunning())&#123;</div><div class="line">        animator.cancel();</div><div class="line">        animator.start();</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        animator=ValueAnimator.ofFloat(<span class="number">0</span>,<span class="number">360</span>).setDuration(duration);</div><div class="line">        animator.setInterpolator(timeInterpolator);</div><div class="line">        animator.addUpdateListener(<span class="keyword">new</span> ValueAnimator.AnimatorUpdateListener() &#123;</div><div class="line">            <span class="meta">@Override</span></div><div class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onAnimationUpdate</span><span class="params">(ValueAnimator animation)</span> </span>&#123;</div><div class="line">                animatedValue = (<span class="keyword">float</span>) animation.getAnimatedValue();</div><div class="line">                invalidate();</div><div class="line">            &#125;</div><div class="line">        &#125;);</div><div class="line">        animator.start();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <h2 id="四、onMeasure"><a href="#四、onMeasure" class="headerlink" title="四、onMeasure"></a>四、onMeasure</h2><p>View默认的onMeasure方法中，并没有根据测量模式，对布局宽高进行调整，所以为了适应<strong>wrap_content</strong>的布局设置，需要对onMeasure方法进行重写。<br></p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onMeasure</span><span class="params">(<span class="keyword">int</span> widthMeasureSpec, <span class="keyword">int</span> heightMeasureSpec)</span> </span>&#123;</div><div class="line">    <span class="keyword">int</span> width = measureDimension(widthMeasureSpec);</div><div class="line">    <span class="keyword">int</span> height = measureDimension(heightMeasureSpec);</div><div class="line">    setMeasuredDimension(width,height);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p><br><br>重写的onMeasure方法，调用了自定义的<strong>measureDimension</strong>方法处理数据，完成后交给系统的setMeasuredDimension方法。接下来看下自定义的<strong>measureDimension</strong>方法。<br><br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">measureDimension</span><span class="params">(<span class="keyword">int</span> measureSpec)</span></span>&#123;</div><div class="line">    <span class="keyword">int</span> size = measureWrap(mPaint);</div><div class="line">    <span class="keyword">int</span> specMode = MeasureSpec.getMode(measureSpec);</div><div class="line">    <span class="keyword">int</span> specSize = MeasureSpec.getSize(measureSpec);</div><div class="line">    <span class="keyword">switch</span> (specMode)&#123;</div><div class="line">        <span class="keyword">case</span> MeasureSpec.UNSPECIFIED:</div><div class="line">            size = measureWrap(mPaint);</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">case</span> MeasureSpec.EXACTLY:</div><div class="line">            size = specSize;</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">case</span> MeasureSpec.AT_MOST:</div><div class="line">			<span class="comment">//合适尺寸不得大于View的尺寸</span></div><div class="line">            size = Math.min(specSize,measureWrap(mPaint));</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> size;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
-<p><br><br><strong>measureDimension</strong>根据测量的类型，分别计算尺寸的长度，每个类型的含义在<a href="http://www.idtkm.com/customview/customview1/" target="_blank" rel="external">第一篇</a>中已经进行了说明，在这里不再赘述。<strong>EXACTLY</strong>是在xml中定义<strong>match_parent以及具体的数值</strong>是使用，而<strong>AT_MOST</strong>则是在<strong>wrap_content</strong>时使用，<strong>measureWrap</strong>方法用于计算当前PieChart的最小合适长度，接下来看看这个方法。<br><br><br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">measureWrap</span><span class="params">(Paint paint)</span></span>&#123;</div><div class="line">    <span class="keyword">float</span> wrapSize;</div><div class="line">    <span class="keyword">if</span> (mPieData!=<span class="keyword">null</span>&amp;&amp;mPieData.size()&gt;<span class="number">1</span>)&#123;</div><div class="line">        NumberFormat numberFormat =NumberFormat.getPercentInstance();</div><div class="line">        numberFormat.setMinimumFractionDigits(percentDecimal);</div><div class="line">        paint.setTextSize(percentTextSize);</div><div class="line">        <span class="keyword">float</span> percentWidth = paint.measureText(numberFormat.format(mPieData.get(stringId).getPercentage())+<span class="string">""</span>);</div><div class="line">        paint.setTextSize(centerTextSize);</div><div class="line">        <span class="keyword">float</span> nameWidth = paint.measureText(name+<span class="string">""</span>);</div><div class="line">        wrapSize = (percentWidth*<span class="number">4</span>+nameWidth*<span class="number">1.0f</span>)*(<span class="keyword">float</span>) offsetScaleRadius;</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        wrapSize = <span class="number">0</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> (<span class="keyword">int</span>) wrapSize;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p><br><br><strong>measureDimension</strong>根据测量的类型，分别计算尺寸的长度，每个类型的含义在<a href="http://www.idtkm.com/customview/customview1/">第一篇</a>中已经进行了说明，在这里不再赘述。<strong>EXACTLY</strong>是在xml中定义<strong>match_parent以及具体的数值</strong>是使用，而<strong>AT_MOST</strong>则是在<strong>wrap_content</strong>时使用，<strong>measureWrap</strong>方法用于计算当前PieChart的最小合适长度，接下来看看这个方法。<br><br><br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">measureWrap</span><span class="params">(Paint paint)</span></span>&#123;</div><div class="line">    <span class="keyword">float</span> wrapSize;</div><div class="line">    <span class="keyword">if</span> (mPieData!=<span class="keyword">null</span>&amp;&amp;mPieData.size()&gt;<span class="number">1</span>)&#123;</div><div class="line">        NumberFormat numberFormat =NumberFormat.getPercentInstance();</div><div class="line">        numberFormat.setMinimumFractionDigits(percentDecimal);</div><div class="line">        paint.setTextSize(percentTextSize);</div><div class="line">        <span class="keyword">float</span> percentWidth = paint.measureText(numberFormat.format(mPieData.get(stringId).getPercentage())+<span class="string">""</span>);</div><div class="line">        paint.setTextSize(centerTextSize);</div><div class="line">        <span class="keyword">float</span> nameWidth = paint.measureText(name+<span class="string">""</span>);</div><div class="line">        wrapSize = (percentWidth*<span class="number">4</span>+nameWidth*<span class="number">1.0f</span>)*(<span class="keyword">float</span>) offsetScaleRadius;</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        wrapSize = <span class="number">0</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> (<span class="keyword">int</span>) wrapSize;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p><br><br>测量宽高的方式类似于TextView，根据PieChart中的<strong>图名与百分比文本的宽度</strong>进行计算的。其中stringId是在处理数据的过程中，计算出的拥有最长字符的区域Id。<br></p>
 <p>从代码中可以看出，<strong>wrap_content情况下的，PieChart的宽高就等于百分比字符长度的4倍，加上图名的长度。</strong><br><br></p>
 <h2 id="五、onSizeChanged"><a href="#五、onSizeChanged" class="headerlink" title="五、onSizeChanged"></a>五、onSizeChanged</h2><p>在此函数中，获取当前View的宽高以及根据<strong>padding</strong>值计算出的实际绘制区域的宽高，同时进行PieChart绘制所需的半径以及布局位置设置。<br><br><br><br><img src="http://ompb0h8qq.bkt.clouddn.com/old/onSizeChange.png" alt="onSizeChanged" title="onSizeChanged" width="300"><br><br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onSizeChanged</span><span class="params">(<span class="keyword">int</span> w, <span class="keyword">int</span> h, <span class="keyword">int</span> oldw, <span class="keyword">int</span> oldh)</span> </span>&#123;</div><div class="line">    <span class="keyword">super</span>.onSizeChanged(w, h, oldw, oldh);</div><div class="line">    mWidth = w-getPaddingLeft()-getPaddingRight();<span class="comment">//适应padding设置</span></div><div class="line">    mHeight = h-getPaddingTop()-getPaddingBottom();<span class="comment">//适应padding设置</span></div><div class="line">    mViewWidth = w;</div><div class="line">    mViewHeight = h;</div><div class="line">    <span class="comment">//标准圆环</span></div><div class="line">    <span class="comment">//圆弧</span></div><div class="line">    r = (<span class="keyword">float</span>) (Math.min(mWidth,mHeight)/<span class="number">2</span>*widthScaleRadius);<span class="comment">// 饼状图半径</span></div><div class="line">    <span class="comment">// 饼状图绘制区域</span></div><div class="line">    rectF.left = -r;</div><div class="line">    rectF.top = -r;</div><div class="line">    rectF.right =r;</div><div class="line">    rectF.bottom = r;</div><div class="line">    <span class="comment">//白色圆弧</span></div><div class="line">    <span class="comment">//透明圆弧</span></div><div class="line">    rTra = (<span class="keyword">float</span>) (r*radiusScaleTransparent);</div><div class="line">    rectFTra.left = -rTra;</div><div class="line">    rectFTra.top = -rTra;</div><div class="line">    rectFTra.right = rTra;</div><div class="line">    rectFTra.bottom = rTra;</div><div class="line">    <span class="comment">//白色圆</span></div><div class="line">    rWhite = (<span class="keyword">float</span>) (r*radiusScaleInside);</div><div class="line"></div><div class="line">    <span class="comment">//浮出圆环</span></div><div class="line">    <span class="comment">//圆弧</span></div><div class="line">    <span class="comment">// 饼状图半径</span></div><div class="line">    rF = (<span class="keyword">float</span>) (Math.min(mWidth,mHeight)/<span class="number">2</span>*widthScaleRadius*offsetScaleRadius);</div><div class="line">    <span class="comment">// 饼状图绘制区域</span></div><div class="line">    rectFF.left = -rF;</div><div class="line">    rectFF.top = -rF;</div><div class="line">    rectFF.right = rF;</div><div class="line">    rectFF.bottom = rF;</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
@@ -1317,7 +1387,7 @@
 <h3 id="1、绘制扇形"><a href="#1、绘制扇形" class="headerlink" title="1、绘制扇形"></a>1、绘制扇形</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">float</span> currentStartAngle = <span class="number">0</span>;<span class="comment">// 当前起始角度</span></div><div class="line">canvas.save();</div><div class="line">canvas.rotate(mStartAngle);</div><div class="line"><span class="keyword">float</span> drawAngle;</div><div class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;mPieData.size(); i++)&#123;</div><div class="line">    PieData pie = mPieData.get(i);</div><div class="line">    <span class="keyword">if</span> (Math.min(pie.getAngle()-<span class="number">1</span>,animatedValue-currentStartAngle)&gt;=<span class="number">0</span>)&#123;</div><div class="line">        drawAngle = Math.min(pie.getAngle()-<span class="number">1</span>,animatedValue-currentStartAngle);</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        drawAngle = <span class="number">0</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (i==angleId)&#123;</div><div class="line">        drawArc(canvas,currentStartAngle,drawAngle,pie,rectFF,rectFTraF,reatFWhite,mPaint);</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        drawArc(canvas,currentStartAngle,drawAngle,pie,rectF,rectFTra,rectFIn,mPaint);</div><div class="line">    &#125;</div><div class="line">    currentStartAngle += pie.getAngle();</div><div class="line">&#125;</div><div class="line">canvas.restore();</div></pre></td></tr></table></figure>
 <ul>
 <li>根据当前的初始角度旋转画布。初始化扇形的起始角度，通过累加计算出下一次的起始角度。<br></li>
-<li>drawArc用于绘制扇形，和<a href="http://www.idtkm.com/customview/customview4/" target="_blank" rel="external">上一篇</a>最后的环形图片一样，通过一大一小两个扇形进行补集运算，获得可知半径的及宽度的圆环，只不过这里多了一个为了立体效果而增加的半透明圆弧。<br></li>
+<li>drawArc用于绘制扇形，和<a href="http://www.idtkm.com/customview/customview4/">上一篇</a>最后的环形图片一样，通过一大一小两个扇形进行补集运算，获得可知半径的及宽度的圆环，只不过这里多了一个为了立体效果而增加的半透明圆弧。<br></li>
 </ul>
 <p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E7%BB%98%E5%88%B6%E6%89%87%E5%BD%A2.png" alt="绘制扇形" title="绘制扇形" width="300"><br></p>
 <ul>
@@ -1332,10 +1402,10 @@
 <li>angleId用于Touch时显示点击是哪一块扇形，具体判断会在TouchEvent中进行。<br><br></li>
 </ul>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">drawText</span><span class="params">(Canvas canvas, PieData pie ,<span class="keyword">float</span> currentStartAngle, NumberFormat numberFormat,<span class="keyword">boolean</span> flag)</span></span>&#123;</div><div class="line">    <span class="keyword">int</span> textPathX = (<span class="keyword">int</span>) (Math.cos(Math.toRadians(currentStartAngle + (pie.getAngle() / <span class="number">2</span>))) * (r + rTra) / <span class="number">2</span>);</div><div class="line">    <span class="keyword">int</span> textPathY = (<span class="keyword">int</span>) (Math.sin(Math.toRadians(currentStartAngle + (pie.getAngle() / <span class="number">2</span>))) * (r + rTra) / <span class="number">2</span>);</div><div class="line">    mPoint.x = textPathX;</div><div class="line">    mPoint.y = textPathY;</div><div class="line">    String[] strings;</div><div class="line">    <span class="keyword">if</span> (flag)&#123;</div><div class="line">        strings = <span class="keyword">new</span> String[]&#123;pie.getName() + <span class="string">""</span>, numberFormat.format(pie.getPercentage()) + <span class="string">""</span>&#125;;</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        strings = <span class="keyword">new</span> String[]&#123;numberFormat.format(pie.getPercentage()) + <span class="string">""</span>&#125;;</div><div class="line">    &#125;</div><div class="line">    textCenter(strings, mPaint, canvas, mPoint, Paint.Align.CENTER);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E7%BB%98%E5%88%B6%E6%96%87%E6%9C%AC.png" alt="绘制文本" title="绘制文本" width="300"><br><br>drawText函数的主要作用就是根据传入的Pie，获取大小扇形的半径合除以2，角度取一半，计算出扇形中心点，然后使用之前介绍的<a href="http://www.idtkm.com/customview/customview3/" target="_blank" rel="external">textCenter多行文本居中函数</a>进行文本绘制。最后累加当前扇形的起始角度，用于下一个扇形使用。<br></p>
+<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E7%BB%98%E5%88%B6%E6%96%87%E6%9C%AC.png" alt="绘制文本" title="绘制文本" width="300"><br><br>drawText函数的主要作用就是根据传入的Pie，获取大小扇形的半径合除以2，角度取一半，计算出扇形中心点，然后使用之前介绍的<a href="http://www.idtkm.com/customview/customview3/">textCenter多行文本居中函数</a>进行文本绘制。最后累加当前扇形的起始角度，用于下一个扇形使用。<br></p>
 <h3 id="3、绘制图名"><a href="#3、绘制图名" class="headerlink" title="3、绘制图名"></a>3、绘制图名</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//饼图名</span></div><div class="line">mPaint.setColor(centerTextColor);</div><div class="line">mPaint.setTextSize(centerTextSize);</div><div class="line">mPaint.setTextAlign(Paint.Align.CENTER);</div><div class="line"><span class="comment">//根据Paint的TextSize计算Y轴的值</span></div><div class="line">mPoint.x=<span class="number">0</span>;</div><div class="line">mPoint.y=<span class="number">0</span>;</div><div class="line">String[] strings = <span class="keyword">new</span> String[]&#123;name+<span class="string">""</span>&#125;;</div><div class="line">textCenter(strings,mPaint,canvas,mPoint, Paint.Align.CENTER);</div></pre></td></tr></table></figure>
 <p>绘制图名的部分就比较简单了，和之前绘制单个Pie时类似，获取x，y坐标为(0,0),然后使用textCenter多行文本绘制函数进行文本绘制。</p>
-<h2 id="七、onTouchEvent"><a href="#七、onTouchEvent" class="headerlink" title="七、onTouchEvent"></a>七、onTouchEvent</h2><p>onTouchEvent用于处理当前的点击事件，具体内容在<a href="http://www.idtkm.com/customview/customview1/" target="_blank" rel="external">第一篇文章</a>中已经进行了说明，这里使用其中的<strong>ACTION_DOWN</strong>与<strong>ACTION_UP</strong>事件。<br></p>
+<h2 id="七、onTouchEvent"><a href="#七、onTouchEvent" class="headerlink" title="七、onTouchEvent"></a>七、onTouchEvent</h2><p>onTouchEvent用于处理当前的点击事件，具体内容在<a href="http://www.idtkm.com/customview/customview1/">第一篇文章</a>中已经进行了说明，这里使用其中的<strong>ACTION_DOWN</strong>与<strong>ACTION_UP</strong>事件。<br></p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onTouchEvent</span><span class="params">(MotionEvent event)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (touchFlag&amp;&amp;mPieData.size()&gt;<span class="number">0</span>)&#123;</div><div class="line">        <span class="keyword">switch</span> (event.getAction())&#123;</div><div class="line">            <span class="keyword">case</span> MotionEvent.ACTION_DOWN:</div><div class="line">                <span class="keyword">float</span> x = event.getX()-(mWidth/<span class="number">2</span>);</div><div class="line">                <span class="keyword">float</span> y = event.getY()-(mHeight/<span class="number">2</span>);</div><div class="line">                <span class="keyword">float</span> touchAngle = <span class="number">0</span>;</div><div class="line">                <span class="keyword">if</span> (x&lt;<span class="number">0</span>&amp;&amp;y&lt;<span class="number">0</span>)&#123;</div><div class="line">                    touchAngle += <span class="number">180</span>;</div><div class="line">                &#125;<span class="keyword">else</span> <span class="keyword">if</span> (y&lt;<span class="number">0</span>&amp;&amp;x&gt;<span class="number">0</span>)&#123;</div><div class="line">                    touchAngle += <span class="number">360</span>;</div><div class="line">                &#125;<span class="keyword">else</span> <span class="keyword">if</span> (y&gt;<span class="number">0</span>&amp;&amp;x&lt;<span class="number">0</span>)&#123;</div><div class="line">                    touchAngle += <span class="number">180</span>;</div><div class="line">                &#125;</div><div class="line">                touchAngle +=Math.toDegrees(Math.atan(y/x));</div><div class="line">                touchAngle = touchAngle-mStartAngle;</div><div class="line">                <span class="keyword">if</span> (touchAngle&lt;<span class="number">0</span>)&#123;</div><div class="line">                    touchAngle = touchAngle+<span class="number">360</span>;</div><div class="line">                &#125;</div><div class="line">                <span class="keyword">float</span> touchRadius = (<span class="keyword">float</span>) Math.sqrt(y*y+x*x);</div><div class="line">                <span class="keyword">if</span> (rTra&lt; touchRadius &amp;&amp; touchRadius&lt; r)&#123;</div><div class="line">                    angleId = -Arrays.binarySearch(pieAngles,(touchAngle))-<span class="number">1</span>;</div><div class="line">                    invalidate();</div><div class="line">                &#125;</div><div class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">            <span class="keyword">case</span> MotionEvent.ACTION_UP:</div><div class="line">                angleId = -<span class="number">1</span>;</div><div class="line">                invalidate();</div><div class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">super</span>.onTouchEvent(event);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <ul>
 <li>运行之前需要判断PieChart是否开启了点击效果，同时需要判断数据不为空。<br></li>
@@ -1353,19 +1423,19 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="CustomView" scheme="http://yoursite.com/tags/CustomView/"/>
+      <category term="CustomView" scheme="http://www.idtkm.com/tags/CustomView/"/>
     
   </entry>
   
   <entry>
     <title>Path图形与逻辑运算</title>
-    <link href="http://yoursite.com/2016/06/01/4%E3%80%81PathFigureAndLogical/"/>
-    <id>http://yoursite.com/2016/06/01/4、PathFigureAndLogical/</id>
+    <link href="http://www.idtkm.com/2016/06/01/4%E3%80%81PathFigureAndLogical/"/>
+    <id>http://www.idtkm.com/2016/06/01/4、PathFigureAndLogical/</id>
     <published>2016-05-31T16:00:00.000Z</published>
-    <updated>2017-03-12T13:01:35.963Z</updated>
+    <updated>2017-10-15T16:02:17.878Z</updated>
     
     <content type="html"><![CDATA[<p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
 <h2 id="涉及知识"><a href="#涉及知识" class="headerlink" title="涉及知识"></a>涉及知识<br></h2><p><strong>Path</strong><br></p>
@@ -1440,7 +1510,7 @@
 <a id="more"></a>
 <h2 id="一、什么是Path"><a href="#一、什么是Path" class="headerlink" title="一、什么是Path"></a>一、什么是Path</h2><p>官方描述:<br><br>&nbsp;&nbsp;&nbsp;&nbsp;Path class 封装了由直线、二次、三次贝塞尔曲线构成的多重曲线几何路径。它可以用canvas.drawPath(path,paint)方法绘图，填充和线都可以（根据paint的样式），或者它可以用于在绘图路径上裁剪或者绘出文本。<br><br></p>
 <p>我的理解:<br><br>&nbsp;&nbsp;&nbsp;&nbsp;Path由任意多条直线、二次贝塞尔或三次贝塞尔曲线组成,可以选择填充或者描边模式，可以使用它裁剪画布或者绘制文字。</p>
-<h2 id="二、添加路径"><a href="#二、添加路径" class="headerlink" title="二、添加路径"></a>二、添加路径</h2><h3 id="1、lineTo-moveTo"><a href="#1、lineTo-moveTo" class="headerlink" title="1、lineTo,moveTo"></a>1、lineTo,moveTo</h3><p>在之前的文章中，使用canvas的函数绘制过<a href="http://www.idtkm.com/customview/customview2/" target="_blank" rel="external">坐标系</a>，这次使用path来绘制。<br></p>
+<h2 id="二、添加路径"><a href="#二、添加路径" class="headerlink" title="二、添加路径"></a>二、添加路径</h2><h3 id="1、lineTo-moveTo"><a href="#1、lineTo-moveTo" class="headerlink" title="1、lineTo,moveTo"></a>1、lineTo,moveTo</h3><p>在之前的文章中，使用canvas的函数绘制过<a href="http://www.idtkm.com/customview/customview2/">坐标系</a>，这次使用path来绘制。<br></p>
 <h4 id="a、创建画笔"><a href="#a、创建画笔" class="headerlink" title="a、创建画笔"></a>a、创建画笔</h4><p>创建画笔并初始化<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//创建画笔</span></div><div class="line"><span class="keyword">private</span> Paint mPaint = <span class="keyword">new</span> Paint();</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initPaint</span><span class="params">()</span></span>&#123;</div><div class="line">    <span class="comment">//初始化画笔</span></div><div class="line">    mPaint.setStyle(Paint.Style.FILL);<span class="comment">//设置画笔类型</span></div><div class="line">    mPaint.setAntiAlias(<span class="keyword">true</span>);<span class="comment">//抗锯齿</span></div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <h4 id="b、绘制坐标轴"><a href="#b、绘制坐标轴" class="headerlink" title="b、绘制坐标轴"></a>b、绘制坐标轴</h4><p>使用onSizeChanged方法，获取根据父布局等因素确认的View宽高<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//宽高</span></div><div class="line"><span class="keyword">private</span> <span class="keyword">int</span> mWidth;</div><div class="line"><span class="keyword">private</span> <span class="keyword">int</span> mHeight;</div><div class="line"></div><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onSizeChanged</span><span class="params">(<span class="keyword">int</span> w, <span class="keyword">int</span> h, <span class="keyword">int</span> oldw, <span class="keyword">int</span> oldh)</span> </span>&#123;</div><div class="line">    <span class="keyword">super</span>.onSizeChanged(w, h, oldw, oldh);</div><div class="line">    mWidth = w;</div><div class="line">    mHeight = h;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>把原点从左上角移动到画布中心,绘制原点与四个端点<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> Path mPath = <span class="keyword">new</span> Path();</div><div class="line"></div><div class="line">canvas.translate(mWidth/<span class="number">2</span>,mHeight/<span class="number">2</span>);<span class="comment">// 将画布坐标原点移动到中心位置</span></div><div class="line"><span class="comment">//绘制坐标原点</span></div><div class="line">mPaint.setColor(Color.BLACK);<span class="comment">//设置画笔颜色</span></div><div class="line">mPaint.setStrokeWidth(<span class="number">10</span>);<span class="comment">//为了看得清楚,设置了较大的画笔宽度</span></div><div class="line">canvas.drawPoint(<span class="number">0</span>,<span class="number">0</span>,mPaint);</div><div class="line"><span class="comment">//绘制坐标轴4个断点</span></div><div class="line">canvas.drawPoints(<span class="keyword">new</span> <span class="keyword">float</span>[]&#123;</div><div class="line">        mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span></div><div class="line">        ,<span class="number">0</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span></div><div class="line">        ,-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span></div><div class="line">        ,<span class="number">0</span>,-mHeight/<span class="number">2</span>*<span class="number">0.8f</span>&#125;,mPaint);</div></pre></td></tr></table></figure></p>
@@ -1596,19 +1666,19 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="CustomView" scheme="http://yoursite.com/tags/CustomView/"/>
+      <category term="CustomView" scheme="http://www.idtkm.com/tags/CustomView/"/>
     
   </entry>
   
   <entry>
     <title>View多行文本居中</title>
-    <link href="http://yoursite.com/2016/05/21/3%E3%80%81Multi-lineTextCenter/"/>
-    <id>http://yoursite.com/2016/05/21/3、Multi-lineTextCenter/</id>
+    <link href="http://www.idtkm.com/2016/05/21/3%E3%80%81Multi-lineTextCenter/"/>
+    <id>http://www.idtkm.com/2016/05/21/3、Multi-lineTextCenter/</id>
     <published>2016-05-20T16:00:00.000Z</published>
-    <updated>2017-03-12T13:01:19.627Z</updated>
+    <updated>2017-10-15T16:02:24.491Z</updated>
     
     <content type="html"><![CDATA[<p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
 <h2 id="涉及知识"><a href="#涉及知识" class="headerlink" title="涉及知识"></a>涉及知识<br></h2><p><strong>绘制过程</strong><br></p>
@@ -1751,7 +1821,7 @@
 </table>
 <p><br></p>
 <p>（<strong>PS: 因API较多，只列出了涉及的方法，想了解更多，请查看<a href="http://developer.android.com/reference/packages.html" target="_blank" rel="external">官方文档</a></strong>)<br></p>
-<h2 id="一、绘制文本"><a href="#一、绘制文本" class="headerlink" title="一、绘制文本"></a>一、绘制文本</h2><p>在Canvas中绘制文本，使用在<a href="http://www.idtkm.com/customview/customview2/" target="_blank" rel="external">上一篇</a>绘制的坐标系</p>
+<h2 id="一、绘制文本"><a href="#一、绘制文本" class="headerlink" title="一、绘制文本"></a>一、绘制文本</h2><p>在Canvas中绘制文本，使用在<a href="http://www.idtkm.com/customview/customview2/">上一篇</a>绘制的坐标系</p>
 <h3 id="1、drawText"><a href="#1、drawText" class="headerlink" title="1、drawText"></a>1、drawText</h3><p>drawText的几种方法如下:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">drawText</span> <span class="params">(String text, <span class="keyword">float</span> x, <span class="keyword">float</span> y, Paint paint)</span></span></div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">drawText</span> <span class="params">(String text, <span class="keyword">int</span> start, <span class="keyword">int</span> end, <span class="keyword">float</span> x, <span class="keyword">float</span> y, Paint paint)</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">drawText</span> <span class="params">(CharSequence text, <span class="keyword">int</span> start, <span class="keyword">int</span> end, <span class="keyword">float</span> x, <span class="keyword">float</span> y, Paint paint)</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">drawText</span> <span class="params">(<span class="keyword">char</span>[] text, <span class="keyword">int</span> index, <span class="keyword">int</span> count, <span class="keyword">float</span> x, <span class="keyword">float</span> y, Paint paint)</span></div></pre></td></tr></table></figure></p>
 <p>x、y值表示绘制文本左下角的坐标<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">Paint mPaint = <span class="keyword">new</span> Paint();</div><div class="line">mPaint.setAntiAlias(<span class="keyword">true</span>);<span class="comment">//抗锯齿</span></div><div class="line">mPaint.setColor(Color.BLUE);<span class="comment">//设置画笔颜色</span></div><div class="line">mPaint.setTextSize(<span class="number">50</span>);</div><div class="line">String string = <span class="string">"Idtk"</span>;</div><div class="line">canvas.drawText(string,<span class="number">0</span>,<span class="number">0</span>,mPaint);</div></pre></td></tr></table></figure></p>
 <p><img src="http://ompb0h8qq.bkt.clouddn.com/old/drawText1.png" alt="drawText1" title="drawText1" width="300"><br><br><br>或者只绘制其中的一部分字符<br><br>start表示从第几个字符开始，end表示到第几个字符之前结束</p>
@@ -1859,19 +1929,19 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="CustomView" scheme="http://yoursite.com/tags/CustomView/"/>
+      <category term="CustomView" scheme="http://www.idtkm.com/tags/CustomView/"/>
     
   </entry>
   
   <entry>
     <title>Android坐标系与View绘制流程</title>
-    <link href="http://yoursite.com/2016/05/08/1%E3%80%81CoordinateAndProcess/"/>
-    <id>http://yoursite.com/2016/05/08/1、CoordinateAndProcess/</id>
+    <link href="http://www.idtkm.com/2016/05/08/1%E3%80%81CoordinateAndProcess/"/>
+    <id>http://www.idtkm.com/2016/05/08/1、CoordinateAndProcess/</id>
     <published>2016-05-07T16:00:00.000Z</published>
-    <updated>2017-03-12T13:01:07.746Z</updated>
+    <updated>2017-10-15T16:02:36.459Z</updated>
     
     <content type="html"><![CDATA[<p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
 <h2 id="涉及知识"><a href="#涉及知识" class="headerlink" title="涉及知识"></a>涉及知识<br></h2><p><strong>绘制过程</strong><br></p>
@@ -2157,283 +2227,10 @@
     
     </summary>
     
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
+      <category term="Android" scheme="http://www.idtkm.com/categories/Android/"/>
     
     
-      <category term="CustomView" scheme="http://yoursite.com/tags/CustomView/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Canvas与ValueAnimator</title>
-    <link href="http://yoursite.com/2016/05/08/2%E3%80%81CanvasAndValueAnimator/"/>
-    <id>http://yoursite.com/2016/05/08/2、CanvasAndValueAnimator/</id>
-    <published>2016-05-07T16:00:00.000Z</published>
-    <updated>2017-03-12T13:01:14.476Z</updated>
-    
-    <content type="html"><![CDATA[<p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
-<h2 id="涉及知识"><a href="#涉及知识" class="headerlink" title="涉及知识"></a>涉及知识<br></h2><p><strong>绘制过程</strong><br></p>
-<table>
-<thead>
-<tr>
-<th>类别</th>
-<th style="text-align:center">API</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>布局</td>
-<td style="text-align:center">onMeasure</td>
-<td>测量View与Child View的大小</td>
-</tr>
-<tr>
-<td></td>
-<td style="text-align:center">onLayout</td>
-<td>确定Child View的位置</td>
-</tr>
-<tr>
-<td></td>
-<td style="text-align:center">onSizeChanged</td>
-<td>确定View的大小</td>
-</tr>
-<tr>
-<td>绘制</td>
-<td style="text-align:center">onDraw</td>
-<td>实际绘制View的内容</td>
-</tr>
-<tr>
-<td>事件处理</td>
-<td style="text-align:center">onTouchEvent</td>
-<td>处理屏幕触摸事件</td>
-</tr>
-<tr>
-<td>重绘</td>
-<td style="text-align:center">invalidate</td>
-<td>调用onDraw方法，重绘View中变化的部分</td>
-</tr>
-</tbody>
-</table>
-<p><br></p>
-<a id="more"></a>
-<p><strong>Canvas涉及方法</strong><br></p>
-<table>
-<thead>
-<tr>
-<th>类别</th>
-<th style="text-align:center">API</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>绘制图形</td>
-<td style="text-align:center">drawPoint, drawPoints, drawLine, drawLines, drawRect, drawRoundRect, drawOval, drawCircle, drawArc</td>
-<td>依次为绘制点、直线、矩形、圆角矩形、椭圆、圆、扇形</td>
-</tr>
-<tr>
-<td>绘制文本</td>
-<td style="text-align:center">drawText, drawPosText, drawTextOnPath</td>
-<td>依次为绘制文字、指定每个字符位置绘制文字、根据路径绘制文字</td>
-</tr>
-<tr>
-<td>画布变换</td>
-<td style="text-align:center">translate, scale, rotate, skew</td>
-<td>依次为平移、缩放、旋转、倾斜（错切）</td>
-</tr>
-<tr>
-<td>画布裁剪</td>
-<td style="text-align:center">clipPath, clipRect, clipRegion</td>
-<td>依次为按路径、按矩形、按区域对画布进行裁剪</td>
-</tr>
-<tr>
-<td>画布状态</td>
-<td style="text-align:center">sava,restore</td>
-<td>保存当前画布矩阵，恢复之前保存的画布</td>
-</tr>
-</tbody>
-</table>
-<p><br><br><strong>Paint涉及方法</strong><br></p>
-<table>
-<thead>
-<tr>
-<th>类别</th>
-<th style="text-align:center">API</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>颜色</td>
-<td style="text-align:center">setColor, setARGB, setAlpha</td>
-<td>依次为设置画笔颜色、透明度</td>
-</tr>
-<tr>
-<td>类型</td>
-<td style="text-align:center">setStyle</td>
-<td>填充(FILL),描边(STROKE),填充加描边(FILL_AND_STROKE)</td>
-</tr>
-<tr>
-<td>抗锯齿</td>
-<td style="text-align:center">setAntiAlias</td>
-<td>画笔是否抗锯齿</td>
-</tr>
-<tr>
-<td>字体大小</td>
-<td style="text-align:center">setTextSize</td>
-<td>设置字体大小</td>
-</tr>
-<tr>
-<td>字体测量</td>
-<td style="text-align:center">getFontMetrics()，getFontMetricsInt()</td>
-<td>返回字体的测量，返回值依次为float、int</td>
-</tr>
-<tr>
-<td>文字宽度</td>
-<td style="text-align:center">measureText</td>
-<td>返回文字的宽度</td>
-</tr>
-<tr>
-<td>文字对齐方式</td>
-<td style="text-align:center">setTextAlign</td>
-<td>左对齐(LEFT),居中对齐(CENTER),右对齐(RIGHT)</td>
-</tr>
-<tr>
-<td>宽度</td>
-<td style="text-align:center">setStrokeWidth</td>
-<td>设置画笔宽度</td>
-</tr>
-<tr>
-<td>笔锋</td>
-<td style="text-align:center">setStrokeCap</td>
-<td>默认(BUTT),半圆形(ROUND),方形(SQUARE)</td>
-</tr>
-</tbody>
-</table>
-<p><br></p>
-<p>（<strong>PS: 因API较多，只列出了涉及的方法，想了解更多，请查看<a href="http://developer.android.com/reference/packages.html" target="_blank" rel="external">官方文档</a></strong>)<br></p>
-<p><strong>(PS: 以下的代码中未指定函数名的都是在onDraw函数中进行使用,同时为了演示方便，在onDraw中使用了一些new方法，请在实际使用中不要这样做，因为onDraw函数是经常需要重新运行的)</strong></p>
-<h2 id="一、Canvas"><a href="#一、Canvas" class="headerlink" title="一、Canvas"></a>一、Canvas</h2><h3 id="1、创建画笔"><a href="#1、创建画笔" class="headerlink" title="1、创建画笔"></a>1、创建画笔</h3><p>创建画笔并初始化<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//创建画笔</span></div><div class="line"><span class="keyword">private</span> Paint mPaint = <span class="keyword">new</span> Paint();</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initPaint</span><span class="params">()</span></span>&#123;</div><div class="line">    <span class="comment">//初始化画笔</span></div><div class="line">	mPaint.setStyle(Paint.Style.FILL);<span class="comment">//设置画笔类型</span></div><div class="line">    mPaint.setAntiAlias(<span class="keyword">true</span>);<span class="comment">//抗锯齿</span></div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
-<h3 id="2、绘制坐标轴"><a href="#2、绘制坐标轴" class="headerlink" title="2、绘制坐标轴"></a>2、绘制坐标轴</h3><p>使用onSizeChanged方法，获取根据父布局等因素确认的View宽高<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//宽高</span></div><div class="line"><span class="keyword">private</span> <span class="keyword">int</span> mWidth;</div><div class="line"><span class="keyword">private</span> <span class="keyword">int</span> mHeight;</div><div class="line"></div><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onSizeChanged</span><span class="params">(<span class="keyword">int</span> w, <span class="keyword">int</span> h, <span class="keyword">int</span> oldw, <span class="keyword">int</span> oldh)</span> </span>&#123;</div><div class="line">    <span class="keyword">super</span>.onSizeChanged(w, h, oldw, oldh);</div><div class="line">    mWidth = w;</div><div class="line">    mHeight = h;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
-<p>把原点从左上角移动到画布中心<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onDraw</span><span class="params">(Canvas canvas)</span> </span>&#123;</div><div class="line">	<span class="keyword">super</span>.onDraw(canvas);</div><div class="line">	canvas.translate(mWidth/<span class="number">2</span>,mHeight/<span class="number">2</span>);<span class="comment">// 将画布坐标原点移动到中心位置</span></div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
-<p>绘制坐标原点<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//绘制坐标原点</span></div><div class="line">mPaint.setColor(Color.BLACK);<span class="comment">//设置画笔颜色</span></div><div class="line">mPaint.setStrokeWidth(<span class="number">10</span>);<span class="comment">//为了看得清楚,设置了较大的画笔宽度</span></div><div class="line">canvas.drawPoint(<span class="number">0</span>,<span class="number">0</span>,mPaint);</div></pre></td></tr></table></figure></p>
-<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E5%8E%9F%E7%82%B9.png" alt="原点" title="原点" width="300"></p>
-<p>绘制坐标系的4个端点，一次绘制多个点<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//绘制坐标轴4个断点</span></div><div class="line">canvas.drawPoints(<span class="keyword">new</span> <span class="keyword">float</span>[]&#123;</div><div class="line">	mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span></div><div class="line">    ,<span class="number">0</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span></div><div class="line">    ,-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span></div><div class="line">    ,<span class="number">0</span>,-mHeight/<span class="number">2</span>*<span class="number">0.8f</span>&#125;,mPaint);</div></pre></td></tr></table></figure></p>
-<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9D%90%E6%A0%87%E7%82%B9.png" alt="坐标点" title="坐标点" width="300"></p>
-<p>绘制坐标轴<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">mPaint.setStrokeWidth(<span class="number">1</span>);<span class="comment">//恢复画笔默认宽度</span></div><div class="line"><span class="comment">//绘制X轴</span></div><div class="line">canvas.drawLine(-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span>,mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span>,mPaint);</div><div class="line"><span class="comment">//绘制Y轴</span></div><div class="line">canvas.drawLine(<span class="number">0</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>,mPaint);</div></pre></td></tr></table></figure></p>
-<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9D%90%E6%A0%87%E8%BD%B4.png" alt="坐标轴" title="坐标轴" width="300"></p>
-<p>绘制坐标轴箭头，一次绘制多条线<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">mPaint.setStrokeWidth(<span class="number">3</span>);</div><div class="line"><span class="comment">//绘制X轴箭头</span></div><div class="line">canvas.drawLines(<span class="keyword">new</span> <span class="keyword">float</span>[]&#123;</div><div class="line">	mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span>,mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.95f</span>,-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,</div><div class="line">	mWidth/<span class="number">2</span>*<span class="number">0.8f</span>,<span class="number">0</span>,mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.95f</span>,mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span></div><div class="line">&#125;,mPaint);</div><div class="line"><span class="comment">//绘制Y轴箭头</span></div><div class="line">canvas.drawLines(<span class="keyword">new</span> <span class="keyword">float</span>[]&#123;</div><div class="line">      <span class="number">0</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>,mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,</div><div class="line">      <span class="number">0</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>,-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,mHeight/<span class="number">2</span>*<span class="number">0.8f</span>-mWidth/<span class="number">2</span>*<span class="number">0.8f</span>*<span class="number">0.05f</span>,</div><div class="line">&#125;,mPaint);</div></pre></td></tr></table></figure></p>
-<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9D%90%E6%A0%87%E7%B3%BB.png" alt="坐标系" title="坐标系" width="300"></p>
-<p>为什么Y轴的箭头是向下的呢？这是因为原坐标系原点在左上角，向下为Y轴正方向，有疑问的可以查看我之前的文章<a href="http://www.idtkm.com/customview/piechart1/" target="_blank" rel="external">自定义View——Android坐标系与View绘制流程</a><br><br><br>如果觉得不舒服，一定要箭头向上的话，可以在绘制Y轴箭头之前翻转坐标系<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">canvas.scale(<span class="number">1</span>,-<span class="number">1</span>);<span class="comment">//翻转Y轴</span></div></pre></td></tr></table></figure></p>
-<h3 id="3、画布变换"><a href="#3、画布变换" class="headerlink" title="3、画布变换"></a>3、画布变换</h3><p>绘制矩形<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//绘制矩形</span></div><div class="line">mPaint.setStyle(Paint.Style.STROKE);<span class="comment">//设置画笔类型</span></div><div class="line">canvas.drawRect(-mWidth/<span class="number">8</span>,-mHeight/<span class="number">8</span>,mWidth/<span class="number">8</span>,mHeight/<span class="number">8</span>,mPaint);</div></pre></td></tr></table></figure></p>
-<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E7%9F%A9%E5%BD%A2.png" alt="矩形" title="矩形" width="300"></p>
-<p>平移，同时使用<strong>new Rect</strong>方法设置矩形<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">canvas.translate(<span class="number">200</span>,<span class="number">200</span>);</div><div class="line">mPaint.setColor(Color.BLUE);</div><div class="line">canvas.drawRect(<span class="keyword">new</span> RectF(-mWidth/<span class="number">8</span>,-mHeight/<span class="number">8</span>,mWidth/<span class="number">8</span>,mHeight/<span class="number">8</span>),mPaint);</div></pre></td></tr></table></figure></p>
-<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E5%B9%B3%E7%A7%BB.png" alt="平移" title="平移" width="300"></p>
-<p>缩放<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">canvas.scale(<span class="number">0.5f</span>,<span class="number">0.5f</span>);</div><div class="line">mPaint.setColor(Color.BLUE);</div><div class="line">canvas.drawRect(<span class="keyword">new</span> RectF(-mWidth/<span class="number">8</span>,-mHeight/<span class="number">8</span>,mWidth/<span class="number">8</span>,mHeight/<span class="number">8</span>),mPaint);</div></pre></td></tr></table></figure></p>
-<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E7%BC%A9%E6%94%BE.png" alt="缩放" title="缩放" width="300"></p>
-<p>旋转<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">canvas.rotate(<span class="number">90</span>);</div><div class="line">mPaint.setColor(Color.BLUE);</div><div class="line">canvas.drawRect(<span class="keyword">new</span> RectF(-mWidth/<span class="number">8</span>,-mHeight/<span class="number">8</span>,mWidth/<span class="number">8</span>,mHeight/<span class="number">8</span>),mPaint);</div></pre></td></tr></table></figure></p>
-<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E6%97%8B%E8%BD%AC.png" alt="旋转" title="旋转" width="300"></p>
-<p>错切<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">canvas.skew(<span class="number">1</span>,<span class="number">0.5f</span>);</div><div class="line">mPaint.setColor(Color.BLUE);</div><div class="line">canvas.drawRect(<span class="keyword">new</span> RectF(-mWidth/<span class="number">8</span>,-mHeight/<span class="number">8</span>,mWidth/<span class="number">8</span>,mHeight/<span class="number">8</span>),mPaint);</div></pre></td></tr></table></figure></p>
-<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E9%94%99%E5%88%87.png" alt="错切" title="错切" width="300"></p>
-<h3 id="4、画布的保存和恢复"><a href="#4、画布的保存和恢复" class="headerlink" title="4、画布的保存和恢复"></a>4、画布的保存和恢复</h3><p>save():用于保存canvas的状态，之后可以调用canvas的平移、旋转、缩放、错切、裁剪等操作。<br>restore():在save之后调用，用于恢复之前保存的画布状态，从而在之后的操作中忽略save与restore之间的画布变化。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">float</span> point = Math.min(mWidth,mHeight)*<span class="number">0.06f</span>/<span class="number">2</span>;</div><div class="line"><span class="keyword">float</span> r = point*(<span class="keyword">float</span>) Math.sqrt(<span class="number">2</span>);</div><div class="line">mPaint.setStyle(Paint.Style.STROKE);</div><div class="line">mPaint.setColor(Color.BLACK);</div><div class="line">canvas.save();</div><div class="line">canvas.rotate(<span class="number">90</span>);</div><div class="line">canvas.drawCircle(<span class="number">200</span>,<span class="number">0</span>,r,mPaint);<span class="comment">//圆心(200,0)</span></div><div class="line">canvas.restore();</div><div class="line">mPaint.setColor(Color.BLUE);</div><div class="line">canvas.drawCircle(<span class="number">200</span>,<span class="number">0</span>,r,mPaint);<span class="comment">//圆心(200,0)</span></div></pre></td></tr></table></figure>
-<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E7%94%BB%E5%B8%83.png" alt="画布" title="画布" width="300"></p>
-<p>保存画布，旋转90°，绘制一个圆，之后恢复画布，使用相同参数再绘制一个圆。可以看到在恢复画布前后，相同参数绘制的圆，分别显示在了坐标系的不同位置。</p>
-<h2 id="二、豆瓣的加载动画"><a href="#二、豆瓣的加载动画" class="headerlink" title="二、豆瓣的加载动画"></a>二、豆瓣的加载动画</h2><p>绘制2个点和一个半圆弧</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">mPaint.setStyle(Paint.Style.STROKE);<span class="comment">//设置画笔样式为描边，如果已经设置，可以忽略</span></div><div class="line">mPaint.setColor(Color.GREEN);</div><div class="line">mPaint.setStrokeWidth(<span class="number">10</span>);</div><div class="line"><span class="keyword">float</span> point = Math.min(mWidth,mHeight)*<span class="number">0.2f</span>/<span class="number">2</span>;</div><div class="line"><span class="keyword">float</span> r = point*(<span class="keyword">float</span>) Math.sqrt(<span class="number">2</span>);</div><div class="line">RectF rectF = <span class="keyword">new</span> RectF(-r,-r,r,r);</div><div class="line">canvas.drawArc(rectF,<span class="number">0</span>,<span class="number">180</span>,<span class="keyword">false</span>,mPaint);</div><div class="line">canvas.drawPoints(<span class="keyword">new</span> <span class="keyword">float</span>[]&#123;</div><div class="line">        point,-point</div><div class="line">        ,-point,-point</div><div class="line">&#125;,mPaint);</div></pre></td></tr></table></figure>
-<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E7%AC%91%E8%84%B8.png" alt="笑脸" title="笑脸" width="300"></p>
-<p>但是豆瓣表情在旋转的过程中，是一个链接着两个点的270°的圆弧</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">mPaint.setColor(Color.GREEN);</div><div class="line">mPaint.setStrokeWidth(<span class="number">10</span>);</div><div class="line"><span class="keyword">float</span> point = Math.min(mWidth,mHeight)*<span class="number">0.2f</span>/<span class="number">2</span>;</div><div class="line"><span class="keyword">float</span> r = point*(<span class="keyword">float</span>) Math.sqrt(<span class="number">2</span>);</div><div class="line">RectF rectF = <span class="keyword">new</span> RectF(-r,-r,r,r);</div><div class="line">canvas.drawArc(rectF,-<span class="number">180</span>,<span class="number">270</span>,<span class="keyword">false</span>,mPaint);</div></pre></td></tr></table></figure>
-<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E5%9C%86%E5%BC%A7.png" alt="圆弧" title="圆弧" width="300"></p>
-<h4 id="这里使用ValueAnimator类，来进行演示-实际上应该是根据touch以及网络情况来进行加载的变化"><a href="#这里使用ValueAnimator类，来进行演示-实际上应该是根据touch以及网络情况来进行加载的变化" class="headerlink" title="这里使用ValueAnimator类，来进行演示(实际上应该是根据touch以及网络情况来进行加载的变化)"></a>这里使用ValueAnimator类，来进行演示(实际上应该是根据touch以及网络情况来进行加载的变化)</h4><p>简单说下ValueAnimator类:<br></p>
-<table>
-<thead>
-<tr>
-<th>API</th>
-<th>简介</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>ofFloat(float… values)</td>
-<td>构建ValueAnimator，设置动画的浮点值，需要设置2个以上的值</td>
-</tr>
-<tr>
-<td>setDuration(long duration)</td>
-<td>设置动画时长，默认的持续时间为300毫秒。</td>
-</tr>
-<tr>
-<td>setInterpolator(TimeInterpolator value)</td>
-<td>设置动画的线性非线性运动，默认AccelerateDecelerateInterpolator</td>
-</tr>
-<tr>
-<td>addUpdateListener(ValueAnimator.AnimatorUpdateListener listener)</td>
-<td>监听动画属性每一帧的变化</td>
-</tr>
-</tbody>
-</table>
-<p>分解步骤，计算一下总共需要的角度:<br><br>1、一个笑脸，x轴下方的圆弧旋转135°，覆盖2个点，此过程中圆弧增加45°<br><br>2、画布旋转135°，此过程中圆弧增加45°<br><br>3、画布旋转360°，此过程中圆弧减少360/5度<br><br>4、画布旋转90°，此过程中圆弧减少90/5度<br><br>5、画布旋转135°，释放覆盖的2个点<br></p>
-<p>动画部分:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> ValueAnimator animator;</div><div class="line"><span class="keyword">private</span> <span class="keyword">float</span> animatedValue;</div><div class="line"><span class="keyword">private</span> <span class="keyword">long</span> animatorDuration = <span class="number">5000</span>;</div><div class="line"><span class="keyword">private</span> TimeInterpolator timeInterpolator = <span class="keyword">new</span> DecelerateInterpolator();</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initAnimator</span><span class="params">(<span class="keyword">long</span> duration)</span></span>&#123;</div><div class="line">    <span class="keyword">if</span> (animator !=<span class="keyword">null</span> &amp;&amp;animator.isRunning())&#123;</div><div class="line">        animator.cancel();</div><div class="line">        animator.start();</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        animator=ValueAnimator.ofFloat(<span class="number">0</span>,<span class="number">855</span>).setDuration(duration);</div><div class="line">        animator.setInterpolator(timeInterpolator);</div><div class="line">        animator.addUpdateListener(<span class="keyword">new</span> ValueAnimator.AnimatorUpdateListener() &#123;</div><div class="line">            <span class="meta">@Override</span></div><div class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onAnimationUpdate</span><span class="params">(ValueAnimator animation)</span> </span>&#123;</div><div class="line">                animatedValue = (<span class="keyword">float</span>) animation.getAnimatedValue();</div><div class="line">                invalidate();</div><div class="line">            &#125;</div><div class="line">        &#125;);</div><div class="line">        animator.start();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
-<p>表情部分:在绘制前最好使用sava()方法保存当前的画布状态，在结束后使用restore()恢复之前保存的状态。<br>为了是表情看上去更自然，所以减少10°的初始角度。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">doubanAnimator2</span><span class="params">(Canvas canvas, Paint mPaint)</span></span>&#123;</div><div class="line">    mPaint.setStyle(Paint.Style.STROKE);<span class="comment">//描边</span></div><div class="line">    mPaint.setStrokeCap(Paint.Cap.ROUND);<span class="comment">//圆角笔触</span></div><div class="line">    mPaint.setColor(Color.rgb(<span class="number">97</span>, <span class="number">195</span>, <span class="number">109</span>));</div><div class="line">    mPaint.setStrokeWidth(<span class="number">15</span>);</div><div class="line">    <span class="keyword">float</span> point = Math.min(mViewWidth,mViewWidth)*<span class="number">0.06f</span>/<span class="number">2</span>;</div><div class="line">    <span class="keyword">float</span> r = point*(<span class="keyword">float</span>) Math.sqrt(<span class="number">2</span>);</div><div class="line">    RectF rectF = <span class="keyword">new</span> RectF(-r,-r,r,r);</div><div class="line">    canvas.save();</div><div class="line"></div><div class="line">    <span class="comment">// rotate</span></div><div class="line">    <span class="keyword">if</span> (animatedValue&gt;=<span class="number">135</span>)&#123;</div><div class="line">        canvas.rotate(animatedValue-<span class="number">135</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">// draw mouth</span></div><div class="line">    <span class="keyword">float</span> startAngle=<span class="number">0</span>, sweepAngle=<span class="number">0</span>;</div><div class="line">    <span class="keyword">if</span> (animatedValue&lt;<span class="number">135</span>)&#123;</div><div class="line">        startAngle = animatedValue +<span class="number">5</span>;</div><div class="line">        sweepAngle = <span class="number">170</span>+animatedValue/<span class="number">3</span>;</div><div class="line">    &#125;<span class="keyword">else</span> <span class="keyword">if</span> (animatedValue&lt;<span class="number">270</span>)&#123;</div><div class="line">        startAngle = <span class="number">135</span>+<span class="number">5</span>;</div><div class="line">        sweepAngle = <span class="number">170</span>+animatedValue/<span class="number">3</span>;</div><div class="line">    &#125;<span class="keyword">else</span> <span class="keyword">if</span> (animatedValue&lt;<span class="number">630</span>)&#123;</div><div class="line">        startAngle = <span class="number">135</span>+<span class="number">5</span>;</div><div class="line">        sweepAngle = <span class="number">260</span>-(animatedValue-<span class="number">270</span>)/<span class="number">5</span>;</div><div class="line">    &#125;<span class="keyword">else</span> <span class="keyword">if</span> (animatedValue&lt;<span class="number">720</span>)&#123;</div><div class="line">        startAngle = <span class="number">135</span>-(animatedValue-<span class="number">630</span>)/<span class="number">2</span>+<span class="number">5</span>;</div><div class="line">        sweepAngle = <span class="number">260</span>-(animatedValue-<span class="number">270</span>)/<span class="number">5</span>;</div><div class="line">    &#125;<span class="keyword">else</span>&#123;</div><div class="line">        startAngle = <span class="number">135</span>-(animatedValue-<span class="number">630</span>)/<span class="number">2</span>-(animatedValue-<span class="number">720</span>)/<span class="number">6</span>+<span class="number">5</span>;</div><div class="line">        sweepAngle = <span class="number">170</span>;</div><div class="line">    &#125;</div><div class="line">    canvas.drawArc(rectF,startAngle,sweepAngle,<span class="keyword">false</span>,mPaint);</div><div class="line"></div><div class="line">    <span class="comment">// draw eye</span></div><div class="line">    canvas.drawPoints(<span class="keyword">new</span> <span class="keyword">float</span>[]&#123;</div><div class="line">        -point,-point</div><div class="line">        ,point,-point</div><div class="line">    &#125;,mPaint);</div><div class="line"></div><div class="line">    canvas.restore();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>在调试完成之后就可以删除，坐标系部分的代码了。感谢<a href="https://github.com/GcsSloop" target="_blank" rel="external">GcsSloop</a>，帮助修改代码，减少冗余</p>
-<p><img src="http://ompb0h8qq.bkt.clouddn.com/old/%E7%AC%91%E8%84%B8.gif" alt="笑脸" title="笑脸"></p>
-<h2 id="三、小结"><a href="#三、小结" class="headerlink" title="三、小结"></a>三、小结</h2><p>本文介绍了canvas的变化，文中的不同部分穿插说明了canvas绘制各种图形的方法，以及结合ValueAnimator制作的豆瓣加载动画。之后的一篇文章会主要分析字符串的长度和宽度，根据这些来参数调整字符串的位置，以达到居中等效果，再后一篇文章内容应该就会编写<a href="https://github.com/Idtk/CustomView/blob/master/gif/PieChart.gif" target="_blank" rel="external">PieChart</a>了。如果在阅读过程中，有任何疑问与问题，欢迎与我联系。<br><br><strong>博客:www.idtkm.com</strong><br><br><strong>GitHub:<a href="https://github.com/Idtk" target="_blank" rel="external">https://github.com/Idtk</a></strong><br><br><strong>微博:<a href="http://weibo.com/Idtk" target="_blank" rel="external">http://weibo.com/Idtk</a></strong><br><br><strong>邮箱:IdtkMa@gmail.com</strong><br></p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;&lt;a href=&quot;https://github.com/Idtk/Blog&quot;&gt;自定义View系列目录&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&quot;涉及知识&quot;&gt;&lt;a href=&quot;#涉及知识&quot; class=&quot;headerlink&quot; title=&quot;涉及知识&quot;&gt;&lt;/a&gt;涉及知识&lt;br&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;绘制过程&lt;/strong&gt;&lt;br&gt;&lt;/p&gt;
-&lt;table&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;类别&lt;/th&gt;
-&lt;th style=&quot;text-align:center&quot;&gt;API&lt;/th&gt;
-&lt;th&gt;描述&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;布局&lt;/td&gt;
-&lt;td style=&quot;text-align:center&quot;&gt;onMeasure&lt;/td&gt;
-&lt;td&gt;测量View与Child View的大小&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td style=&quot;text-align:center&quot;&gt;onLayout&lt;/td&gt;
-&lt;td&gt;确定Child View的位置&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td style=&quot;text-align:center&quot;&gt;onSizeChanged&lt;/td&gt;
-&lt;td&gt;确定View的大小&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;绘制&lt;/td&gt;
-&lt;td style=&quot;text-align:center&quot;&gt;onDraw&lt;/td&gt;
-&lt;td&gt;实际绘制View的内容&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;事件处理&lt;/td&gt;
-&lt;td style=&quot;text-align:center&quot;&gt;onTouchEvent&lt;/td&gt;
-&lt;td&gt;处理屏幕触摸事件&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;重绘&lt;/td&gt;
-&lt;td style=&quot;text-align:center&quot;&gt;invalidate&lt;/td&gt;
-&lt;td&gt;调用onDraw方法，重绘View中变化的部分&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;p&gt;&lt;br&gt;&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="Android" scheme="http://yoursite.com/categories/Android/"/>
-    
-    
-      <category term="CustomView" scheme="http://yoursite.com/tags/CustomView/"/>
+      <category term="CustomView" scheme="http://www.idtkm.com/tags/CustomView/"/>
     
   </entry>
   

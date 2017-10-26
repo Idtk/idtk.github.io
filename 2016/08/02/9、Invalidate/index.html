@@ -94,13 +94,13 @@
 一、invalidate与postInvalidatein">
 <meta property="og:type" content="article">
 <meta property="og:title" content="View的invalidate传递与绘制流程分析">
-<meta property="og:url" content="http://yoursite.com/2016/08/02/9、Invalidate/index.html">
+<meta property="og:url" content="http://www.idtkm.com/2016/08/02/9、Invalidate/index.html">
 <meta property="og:site_name" content="Idtk">
 <meta property="og:description" content="上一篇文章自定义View——View的弹性滑动中，我们对View的滑动进行了实战以及简单分析。但在文章的最后，仍然遗留了两个问题,第一个是invalidate与postInvalidate有什么区别呢？第二个是invalidate是如何调用computeScroll()方法的呢？这两个问题将在这一篇文章中进行分析。
 自定义View系列目录
 一、invalidate与postInvalidatein">
 <meta property="og:image" content="http://ompb0h8qq.bkt.clouddn.com/old/invalidate.png">
-<meta property="og:updated_time" content="2017-03-12T13:06:43.597Z">
+<meta property="og:updated_time" content="2017-10-15T16:01:35.384Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="View的invalidate传递与绘制流程分析">
 <meta name="twitter:description" content="上一篇文章自定义View——View的弹性滑动中，我们对View的滑动进行了实战以及简单分析。但在文章的最后，仍然遗留了两个问题,第一个是invalidate与postInvalidate有什么区别呢？第二个是invalidate是如何调用computeScroll()方法的呢？这两个问题将在这一篇文章中进行分析。
@@ -134,7 +134,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/08/02/9、Invalidate/"/>
+  <link rel="canonical" href="http://www.idtkm.com/2016/08/02/9、Invalidate/"/>
 
 
 
@@ -275,7 +275,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/08/02/9、Invalidate/">
+    <link itemprop="mainEntityOfPage" href="http://www.idtkm.com/2016/08/02/9、Invalidate/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Idtk">
@@ -379,7 +379,7 @@
       
 
       
-        <p><strong>上一篇文章<a href="http://www.idtkm.com/customview/customview8/" target="_blank" rel="external">自定义View——View的弹性滑动</a>中，我们对View的滑动进行了实战以及简单分析。但在文章的最后，仍然遗留了两个问题,第一个是invalidate与postInvalidate有什么区别呢？第二个是invalidate是如何调用computeScroll()方法的呢？这两个问题将在这一篇文章中进行分析。</strong></p>
+        <p><strong>上一篇文章<a href="http://www.idtkm.com/customview/customview8/">自定义View——View的弹性滑动</a>中，我们对View的滑动进行了实战以及简单分析。但在文章的最后，仍然遗留了两个问题,第一个是invalidate与postInvalidate有什么区别呢？第二个是invalidate是如何调用computeScroll()方法的呢？这两个问题将在这一篇文章中进行分析。</strong></p>
 <p><a href="https://github.com/Idtk/Blog" target="_blank" rel="external">自定义View系列目录</a></p>
 <h2 id="一、invalidate与postInvalidate"><a href="#一、invalidate与postInvalidate" class="headerlink" title="一、invalidate与postInvalidate"></a>一、invalidate与postInvalidate</h2><p>invalidate与postInvadlidate都是用于请求View重绘的API，invalidate在主线程中进行调用，而postInvadlidate则在子线程中进行调用。<br><br>我们来分析下postInvadlidate的源码 :<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postInvalidate</span><span class="params">()</span> </span>&#123;</div><div class="line">    postInvalidateDelayed(<span class="number">0</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>postInvalidate()蒋会调用postInvalidateDelayed(0)方法，继续跟进。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postInvalidateDelayed</span><span class="params">(<span class="keyword">long</span> delayMilliseconds)</span> </span>&#123;</div><div class="line">    <span class="keyword">final</span> AttachInfo attachInfo = mAttachInfo;</div><div class="line">    <span class="keyword">if</span> (attachInfo != <span class="keyword">null</span>) &#123;</div><div class="line">        attachInfo.mViewRootImpl.dispatchInvalidateDelayed(<span class="keyword">this</span>, delayMilliseconds);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
@@ -427,6 +427,27 @@
     <div>
       
         
+<div class="my_post_copyright">
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+  <!-- JS库 sweetalert 可修改路径 -->
+  <script type="text/javascript" src="http://jslibs.wuxubj.cn/sweetalert_mini/jquery-1.7.1.min.js"></script>
+  <script src="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.mini.css">
+  <p><span>文章作者:</span><a href="/" title="访问 Idtk 的个人博客">Idtk</a></p>
+  <p><span>本文标题:</span><a href="/2016/08/02/9、Invalidate/">View的invalidate传递与绘制流程分析</a></p>
+  <!-- http://www.idtkm.com/2016/08/02/9、Invalidate/ -->
+  <p><span>原始链接:</span><a href="/2016/08/02/9、Invalidate/" title="View的invalidate传递与绘制流程分析">http://www.idtkm.com/2016/08/02/9、Invalidate/</a></p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
 
       
     </div>
@@ -440,13 +461,6 @@
 
 
     <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/CustomView/" rel="tag"># CustomView</a>
-          
-        </div>
-      
 
       
         
@@ -547,7 +561,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-count">21</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -565,7 +579,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -677,6 +691,11 @@
     NexT.Mist
   </a>
 </div>
+
+
+
+
+
 
 
         
